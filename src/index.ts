@@ -7,7 +7,7 @@ const port = 3000;
 app.use(express.json()); // for parsing application/json
 
 // Start the Express server
-app.get('/', (req: Request, res: Response) => {
+app.get('/api/test', (req: Request, res: Response) => {
   res.json({ message: 'Server working!' });
 });
 
