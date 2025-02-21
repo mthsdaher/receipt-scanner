@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import connectDB from './config/database';
 
 const app = express();
 const port = 3000;
@@ -7,11 +8,15 @@ app.use(express.json()); // for parsing application/json
 
 // Start the Express server
 app.get('/', (req: Request, res: Response) => {
-  res.send('Hello World!');
+  res.json({ message: 'Server working!' });
 });
 
-// Start the Express server
-app.listen(port, () => {
-  console.log(`server started at http://localhost:${port}`);
-});
+// Inicianting MongoDB connection and starting the server
+const startServer = async () => {
+    await connectDB();
+    app.listen(port, () => {
+        console.log(`server started at http://localhost:${port}`);
+    });
+}
 
+startServer();
