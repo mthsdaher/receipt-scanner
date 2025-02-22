@@ -1,13 +1,15 @@
+// filepath: /d:/mths/projetos/receipt-scanner/receipt-scanner/tsconfig.json
 {
   "compilerOptions": {
     "target": "ES6",
     "module": "commonjs",
     "outDir": "./dist",
-    "rootDir": "src",
+    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]
