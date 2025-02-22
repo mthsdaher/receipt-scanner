@@ -1,0 +1,6 @@
+{
+    "fullName": "Mths",
+    "age": "12",
+    "email": "mths@mths.com",
+    "cellNumber": "4376603333"
+}
