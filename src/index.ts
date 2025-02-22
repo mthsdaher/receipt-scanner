@@ -1,39 +1,44 @@
-import express, { Request, Response } from "express";
-import connectDB from "./config/database";
-import userRoutes from "./routes/userRoutes";
-import receiptRoutes from "./routes/receiptRoutes";
-require("dotenv").config();
+import express, { Request, Response, NextFunction } from 'express';
+import connectDB from './config/database';
+import userRoutes from './routes/userRoutes';
+import receiptRoutes from './routes/receiptRoutes';
+import logger from './middleware/logger';
 
-// Initialize Express app
+require('dotenv').config();
+
 const app = express();
-const port = process.env.PORT || 3002; // env variable or default to 3002
+const port = process.env.PORT || 3002;
 
-// Middleware to parse JSON requests
-app.use(express.json());
+// Apply middleware
+app.use(logger); // Log requests
+app.use(express.json()); // Parse JSON bodies
+app.use('/api/users', userRoutes); // User routes
+app.use('/api/receipts', receiptRoutes); // Receipt routes
 
-// Mount user routes
-app.use("/api/users", userRoutes);
-app.use("/api/receipts", receiptRoutes); // Add receipt routes
-
-// Test route
-app.get("/api/test", (req: Request, res: Response) => {
-  res.json({ message: "Server is running!" });
+// Optional: Simple global error-handling middleware for unhandled errors
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error('Unhandled error:', err.stack);
+  res.status(500).json({
+    status: 'error',
+    message: 'An unexpected server error occurred',
+  });
 });
 
-// Fction to start the server
+// Test route
+app.get('/api/test', (req: Request, res: Response) => {
+  res.json({ message: 'Server is running!' });
+});
+
 const startServer = async () => {
   try {
-    // Connect to MongoDB
     await connectDB();
-    // Start the server
     app.listen(port, () => {
       console.log(`Server running at http://localhost:${port}`);
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 };
 
-// Run the server
 startServer();

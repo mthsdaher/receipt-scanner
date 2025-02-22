@@ -1,6 +1,16 @@
+Create user (POST)
 {
     "fullName": "Mths",
     "age": "12",
     "email": "mths@mths.com",
     "cellNumber": "4376603333"
+}
+
+Create Receipt (POST)
+{
+  "userId": "67ba1ce1c4226a7c61afb1af", // Replace with an existing user's _id (e.g., from GET /api/users)
+  "amount": 50.75,
+  "date": "2025-02-20",
+  "description": "Grocery shopping",
+  "category": "Food"
 }
