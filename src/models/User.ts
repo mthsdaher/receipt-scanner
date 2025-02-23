@@ -1,4 +1,3 @@
-// src/models/User.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IUser extends Document {
@@ -6,7 +5,9 @@ export interface IUser extends Document {
   age: number;
   email: string;
   cellNumber: string;
-  password: string; // Add password field
+  password: string;
+  resetToken?: string; 
+  resetTokenExpires?: Date; 
 }
 
 const UserSchema: Schema = new Schema({
@@ -36,6 +37,14 @@ const UserSchema: Schema = new Schema({
     type: String,
     required: [true, 'Password is required'],
     select: false, // Prevents password from being returned in queries by default
+  },
+  resetToken: {
+    type: String, // Stores the hashed or plain reset token
+    default: undefined,
+  },
+  resetTokenExpires: {
+    type: Date, // Expiration date for the reset token
+    default: undefined,
   },
 }, {
   timestamps: true, // Automatically add createdAt and updatedAt fields

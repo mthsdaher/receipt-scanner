@@ -1,9 +1,9 @@
-Create user (POST)
 {
-    "fullName": "Mths",
-    "age": "12",
-    "email": "mths@mths.com",
-    "cellNumber": "4376603333"
+  "fullName": "Test User",
+  "age": 30,
+  "email": "testuser@example.com",
+  "cellNumber": "+5511777777777",
+  "password": "SecureP@ss123"
 }
 
 Create Receipt (POST)
@@ -14,3 +14,4 @@ Create Receipt (POST)
   "description": "Grocery shopping",
   "category": "Food"
 }
+
