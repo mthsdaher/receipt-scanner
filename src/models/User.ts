@@ -1,14 +1,14 @@
+// src/models/User.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
-// Define the interface for the User document
-interface IUser extends Document {
+export interface IUser extends Document {
   fullName: string;
   age: number;
   email: string;
   cellNumber: string;
+  password: string; // Add password field
 }
 
-// Create the User schema
 const UserSchema: Schema = new Schema({
   fullName: {
     type: String,
@@ -32,9 +32,13 @@ const UserSchema: Schema = new Schema({
     required: [true, 'Cell number is required'],
     trim: true,
   },
+  password: {
+    type: String,
+    required: [true, 'Password is required'],
+    select: false, // Prevents password from being returned in queries by default
+  },
 }, {
   timestamps: true, // Automatically add createdAt and updatedAt fields
 });
 
-// Export the User model
 export default mongoose.model<IUser>('User', UserSchema);
