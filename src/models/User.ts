@@ -1,13 +1,21 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+export enum UserStatus {
+  Pending_Activation = 'Pending_Activation',
+  Active = 'Active',
+}
+
 export interface IUser extends Document {
   fullName: string;
   age: number;
   email: string;
   cellNumber: string;
   password: string;
-  resetToken?: string; 
-  resetTokenExpires?: Date; 
+  resetToken?: string;
+  resetTokenExpires?: Date;
+  verifCd?: string; // Verification code for email confirmation
+  expDt?: Date; // Expiration date for verification code
+  status: UserStatus; // User status (Pending_Activation or Active)
 }
 
 const UserSchema: Schema = new Schema({
@@ -39,12 +47,25 @@ const UserSchema: Schema = new Schema({
     select: false, // Prevents password from being returned in queries by default
   },
   resetToken: {
-    type: String, // Stores the hashed or plain reset token
+    type: String,
     default: undefined,
   },
   resetTokenExpires: {
-    type: Date, // Expiration date for the reset token
+    type: Date,
     default: undefined,
+  },
+  verifCd: {
+    type: String,
+    default: undefined,
+  },
+  expDt: {
+    type: Date,
+    default: undefined,
+  },
+  status: {
+    type: String,
+    enum: Object.values(UserStatus),
+    default: UserStatus.Pending_Activation,
   },
 }, {
   timestamps: true, // Automatically add createdAt and updatedAt fields
