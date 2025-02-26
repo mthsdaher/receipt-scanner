@@ -1,6 +1,6 @@
 // src/routes/userRoutes.ts
 import { Router } from 'express';
-import { signup, login, getUsers, deleteUser, passwordReset, requestPasswordReset, sendCode, validateCode } from '../controllers/userController';
+import { signup, login, getUsers, deleteUser, passwordReset, requestPasswordReset, validateCode } from '../controllers/userController';
 import { currentUser } from '../middleware/current-user';
 
 const { check } = require('express-validator');
@@ -60,15 +60,6 @@ router.post(
     check('resetToken').notEmpty().withMessage('Reset token is required'),
   ],
   passwordReset
-);
-
-// POST /api/users/send-code - Send a verification code for email confirmation
-router.post(
-  '/send-code',
-  [
-    check('email').isEmail().withMessage('Valid email is required'),
-  ],
-  sendCode
 );
 
 // POST /api/users/validate-code - Validate the verification code
