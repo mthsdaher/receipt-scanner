@@ -3,11 +3,18 @@ import express from 'express';
 import userRoutes from './routes/userRoutes';
 import swaggerUi from 'swagger-ui-express';
 import path from 'path';
-import 'dotenv/config'; // Load environment variables
+import cors from 'cors';
+import 'dotenv/config'; 
 
 const app = express();
 
-// Middleware to parse JSON bodies
+app.use(cors({
+  origin: 'http://localhost:3000', // allow requests from the frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // allow these HTTP methods
+  credentials: true, // allow cookies or credentials if needed
+}));
+
+// middleware to parse JSON bodies
 app.use(express.json());
 
 // Serve Swagger UI
