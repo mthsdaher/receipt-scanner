@@ -56,7 +56,7 @@ const Signup: React.FC = () => {
           onChange={handleChange}
           required
         /> {}
-        {errors.fullName && <span>{errors.fullName}</span>} {/* Display error message if validation fails */}
+        {errors.fullName && <span>{errors.fullName}</span>}
       </div>
       <div>
         <input
@@ -66,7 +66,7 @@ const Signup: React.FC = () => {
           onChange={handleChange}
           required
         /> {}
-        {errors.age && <span>{errors.age}</span>} {/* Display age validation error if present */}
+        {errors.age && <span>{errors.age}</span>}
       </div>
       <div>
         <input
@@ -76,7 +76,7 @@ const Signup: React.FC = () => {
           onChange={handleChange}
           required
         /> {}
-        {errors.email && <span>{errors.email}</span>} {/* Display email validation error if present */}
+        {errors.email && <span>{errors.email}</span>}
       </div>
       <div>
         <input
@@ -97,7 +97,7 @@ const Signup: React.FC = () => {
           onChange={handleChange}
           required
         /> {}
-        {errors.password && <span>{errors.password}</span>} {/* Display password validation error if present */}
+        {errors.password && <span>{errors.password}</span>} {}
       </div>
       <button type="submit">Sign up</button> {}
     </form>
