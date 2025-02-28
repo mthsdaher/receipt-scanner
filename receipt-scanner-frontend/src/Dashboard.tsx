@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import Webcam from 'react-webcam';
 import axios from 'axios';
+import { calculateReceiptTotal, receiptSchema } from './utils/functions';
 
 const Dashboard: React.FC = () => {
   // State to manage the current mode (scan or manual input)

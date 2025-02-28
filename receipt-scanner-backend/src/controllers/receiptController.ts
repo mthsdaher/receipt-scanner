@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Receipt from "../models/Receipt";
 import User from "../models/User";
+import { calculateReceiptTotal } from '../utils/functions';
 
 const { validationResult } = require("express-validator");
 
