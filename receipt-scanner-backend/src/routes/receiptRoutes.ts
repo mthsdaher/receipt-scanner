@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { createReceipt, getUserReceipts } from '../controllers/receiptController';
 const { body, validationResult } = require('express-validator');
+import { scanReceipt } from '../controllers/receiptController';
 
 const router = Router();
 
@@ -19,5 +20,7 @@ router.post(
 
 // GET /api/receipts/:userId - List all receipts for a user
 router.get('/:userId', getUserReceipts);
+
+router.post('/scan', scanReceipt);
 
 export default router;

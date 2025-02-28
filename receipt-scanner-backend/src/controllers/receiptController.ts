@@ -56,3 +56,16 @@ export const getUserReceipts = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const scanReceipt = async (req: Request, res: Response) => {
+  // Simulate OCR processing (replace with actual Tesseract.js logic later)
+  const simulatedData = {
+    seller: "Example Store",
+    date: "2023-10-25",
+    items: ["Item 1", "Item 2"],
+    value: 100,
+    taxes: 10,
+    totalValue: 110,
+    };
+    res.status(200).json(simulatedData);
+};
