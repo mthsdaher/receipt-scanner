@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createReceipt, getUserReceipts } from '../controllers/receiptController';
-const { body, validationResult } = require('express-validator');
+const { body } = require('express-validator');
 import { scanReceipt } from '../controllers/receiptController';
 
 const router = Router();
