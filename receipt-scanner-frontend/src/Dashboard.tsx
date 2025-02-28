@@ -1,214 +1,96 @@
-// Import React hooks for state management and references, along with necessary libraries
 import React, { useState, useRef } from 'react';
-import Webcam from 'react-webcam';
-import axios from 'axios';
-import { calculateReceiptTotal, receiptSchema } from './utils/functions';
 import { z } from 'zod';
+import Webcam from 'react-webcam';
 
-// Define the shape of receipt data for validation
-const receiptManualSchema = z.object({
-  seller: z.string().min(1, 'Seller is required'),
-  date: z.string().min(1, 'Date is required').regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
-  items: z.string().min(1, 'Items are required').transform((val) => val.split(',').map(item => item.trim()) as string[]),
+// Define the Zod schema for receipt data validation
+const receiptSchema = z.object({
+  seller: z.string().min(1, 'Seller name is required'),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+  items: z.array(z.string()).min(1, 'At least one item is required'),
   value: z.number().min(0, 'Value must be non-negative'),
   taxes: z.number().min(0, 'Taxes must be non-negative'),
+  totalValue: z.number().min(0, 'Total value must be non-negative'),
 });
 
-// Dashboard component to handle receipt scanning or manual entry
+// Interface for receipt data to ensure TypeScript type safety
+interface ReceiptData {
+  seller: string;
+  date: string;
+  items: string[];
+  value: number;
+  taxes: number;
+  totalValue: number;
+}
+
 const Dashboard: React.FC = () => {
-  // State to manage the current mode (scan or manual input)
-  const [mode, setMode] = useState<'scan' | 'manual' | null>(null);
-  // State to store the captured image or manually entered receipt data
-  const [receiptData, setReceiptData] = useState({
+  // State to manage receipt data
+  const [receiptData, setReceiptData] = useState<ReceiptData>({
     seller: '',
     date: '',
-    items: [] as string[],
+    items: [],
     value: 0,
     taxes: 0,
     totalValue: 0,
   });
-  // Reference to the webcam component for capturing images
+
+  // Reference to the webcam component
   const webcamRef = useRef<Webcam>(null);
-  // State to store the captured image
+  // State to store the captured image from the webcam
   const [image, setImage] = useState<string | null>(null);
-  // State to store validation errors for manual input
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Handler to capture image from webcam
-  const captureImage = () => {
+  // Function to capture an image from the webcam
+  const capture = () => {
     const imageSrc = webcamRef.current?.getScreenshot();
-    setImage(imageSrc || null);
-  };
-
-  // Handler to upload the captured image to the backend
-  const uploadImage = async () => {
-    if (!image) return;
-
-    try {
-      // Send the image to the backend API for OCR processing
-      const response = await axios.post('http://localhost:3002/api/receipts/scan', { image });
-      const validatedData = receiptSchema.parse(response.data); // Validate the OCR response
-      setReceiptData({
-        ...validatedData,
-        totalValue: calculateReceiptTotal(validatedData.value, validatedData.taxes), // Calculate total value
-      });
-      setImage(null); // Clear the image after successful upload
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        setErrors(error.issues.reduce((acc, issue) => ({ ...acc, [issue.path[0] as string]: issue.message }), {}));
-      } else {
-        console.error('Error uploading receipt image:', error);
-        alert('Failed to process the receipt. Please try again.');
-      }
+    if (imageSrc) {
+      setImage(imageSrc);
+      // Here, you could process the image (e.g., send to an OCR API) to extract receipt data
     }
   };
 
-  // Handler for manual input form submission
-  const handleManualSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const itemsInput = formData.get('items')?.toString() || '';
+  // Function to update receipt data with Zod validation
+  const updateReceipt = () => {
+    // Simulated new receipt data (replace with actual data extraction logic if needed)
+    const newData = {
+      seller: 'Store ABC',
+      date: '2023-10-25',
+      items: ['Produect 1', 'Product 2'],
+      value: 200,
+      taxes: 20,
+      totalValue: 220,
+    };
 
-    try {
-      // Validate manual input using Zod
-      const parsedData = receiptManualSchema.parse({
-        seller: formData.get('seller')?.toString() || '',
-        date: formData.get('date')?.toString() || '',
-        items: itemsInput,
-        value: parseFloat(formData.get('value')?.toString() || '0'),
-        taxes: parseFloat(formData.get('taxes')?.toString() || '0'),
-      });
-      // Calculate total value using the utility function
-      const totalValue = calculateReceiptTotal(parsedData.value, parsedData.taxes);
-      setReceiptData({ ...parsedData, totalValue });
-      setErrors({}); // Clear any previous errors
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        setErrors(error.issues.reduce((acc, issue) => ({ ...acc, [issue.path[0] as string]: issue.message }), {}));
-      }
+    // Validate the new data against the Zod schema
+    const result = receiptSchema.safeParse(newData);
+    if (result.success) {
+      setReceiptData(newData); // Update state if validation passes
+    } else {
+      console.error('Validation errors:', result.error); // Log validation errors
     }
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Dashboard</h1>
-      <p>Welcome to your dashboard! Choose an option below to add a receipt.</p>
+    <div>
+      <h1>Receipt Dashboard</h1>
+      <p>Seller: {receiptData.seller}</p>
+      <p>Date: {receiptData.date}</p>
+      <p>Items: {receiptData.items.join(', ')}</p>
+      <p>Value: {receiptData.value}</p>
+      <p>Taxes: {receiptData.taxes}</p>
+      <p>Total: {receiptData.totalValue}</p>
+      {/* Button to trigger receipt data update */}
+      <button onClick={updateReceipt}>Update Receipt</button>
 
-      {/* Mode selection buttons */}
-      {!mode && (
-        <div>
-          <button onClick={() => setMode('scan')} style={{ marginRight: '10px' }}>
-            Scan Receipt
-          </button>
-          <button onClick={() => setMode('manual')}>
-            Enter Receipt Manually
-          </button>
-        </div>
-      )}
-
-      {/* Scan mode */}
-      {mode === 'scan' && (
-        <div>
-          <h2>Scan Your Receipt</h2>
-          <Webcam
-            audio={false}
-            ref={webcamRef}
-            screenshotFormat="image/jpeg"
-            width={350}
-            style={{ marginBottom: '10px' }}
-          />
-          <div>
-            <button onClick={captureImage} style={{ marginRight: '10px' }}>
-              Capture Photo
-            </button>
-            <button onClick={() => setMode(null)}>Cancel</button>
-          </div>
-          {image && (
-            <div>
-              <img src={image} alt="Captured Receipt" style={{ marginTop: '10px' }} />
-              <button onClick={uploadImage} style={{ marginTop: '10px' }}>
-                Upload and Process
-              </button>
-            </div>
-          )}
-          {Object.values(errors).map((error, index) => (
-            <p key={index} style={{ color: 'red' }}>{error}</p>
-          ))}
-        </div>
-      )}
-
-      {/* Manual input mode */}
-      {mode === 'manual' && (
-        <div>
-          <h2>Enter Receipt Details</h2>
-          <form onSubmit={handleManualSubmit}>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Seller: </label>
-              <input type="text" name="seller" required />
-              {errors.seller && <span style={{ color: 'red' }}>{errors.seller}</span>}
-            </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Date: </label>
-              <input type="date" name="date" required />
-              {errors.date && <span style={{ color: 'red' }}>{errors.date}</span>}
-            </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Items (comma-separated): </label>
-              <input type="text" name="items" required />
-              {errors.items && <span style={{ color: 'red' }}>{errors.items}</span>}
-            </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Value: </label>
-              <input type="number" name="value" step="0.01" required />
-              {errors.value && <span style={{ color: 'red' }}>{errors.value}</span>}
-            </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Taxes: </label>
-              <input type="number" name="taxes" step="0.01" required />
-              {errors.taxes && <span style={{ color: 'red' }}>{errors.taxes}</span>}
-            </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Total Value: </label>
-              <input type="number" name="totalValue" step="0.01" value={receiptData.totalValue} readOnly />
-            </div>
-            <button type="submit" style={{ marginRight: '10px' }}>
-              Submit
-            </button>
-            <button type="button" onClick={() => setMode(null)}>
-              Cancel
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Display receipt data */}
-      {receiptData.seller && (
-        <div style={{ marginTop: '20px' }}>
-          <h2>Receipt Data</h2>
-          <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-            <thead>
-              <tr>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Seller</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Date</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Items</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Value</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Taxes</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Total Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{receiptData.seller}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{receiptData.date}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{receiptData.items.join(', ')}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{receiptData.value.toFixed(2)}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{receiptData.taxes.toFixed(2)}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{receiptData.totalValue.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* Webcam component for capturing receipt images */}
+      <Webcam
+        audio={false}
+        ref={webcamRef}
+        screenshotFormat="image/jpeg"
+        width={350}
+      />
+      {/* Button to capture an image from the webcam */}
+      <button onClick={capture}>Capture Photo</button>
+      {/* Display the captured image if available */}
+      {image && <img src={image} alt="Captured Receipt" />}
     </div>
   );
 };
