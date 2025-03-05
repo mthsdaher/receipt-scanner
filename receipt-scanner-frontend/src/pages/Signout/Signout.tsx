@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Signout component to handle user logout
-const Signout: React.FC = () => {
+const Signout = () => {
   // Hook for programmatic navigation
   const navigate = useNavigate();
 
