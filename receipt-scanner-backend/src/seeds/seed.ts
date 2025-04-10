@@ -7,7 +7,7 @@ import connectDB from '../config/database';
 const users = [
   {
     fullName: 'Matheus Veloso',
-    age: 27,
+    age: 27,  
     email: 'mthsv@example.com',
     cellNumber: '+14376603333',
     password: 'test123*'

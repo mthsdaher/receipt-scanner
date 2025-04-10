@@ -5,6 +5,7 @@ import swaggerUi from 'swagger-ui-express';
 import path from 'path';  
 import cors from 'cors';
 import 'dotenv/config'; 
+import connectDB from './config/database';
 
 const app = express();
 
@@ -28,7 +29,12 @@ app.use('/api/receipts', receiptRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3002;
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-  console.log(`Swagger UI available at http://localhost:${PORT}/api-docs`);
+
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`✅ Server running at http://localhost:${PORT}`);
+    console.log(`✅ Swagger UI available at http://localhost:${PORT}/api-docs`);
+  });
+}).catch((err) => {
+  console.error('❌ Failed to start server:', err);
 });
