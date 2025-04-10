@@ -1,5 +1,6 @@
 import React, { useState } from 'react'; 
 import { z } from 'zod'; 
+import axios from 'axios';
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/; 
 const cellNumberRegex = /^\d+$/; 
@@ -31,20 +32,39 @@ const Signup: React.FC = () => {
     setFormData({ ...formData, [name]: value }); // Update formData state immutably with the new input value
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent default form submission to handle it programmatically
-    const result = signupSchema.safeParse(formData); // Perform schema validation on form data with safeParse for error handling
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = signupSchema.safeParse(formData);
+  
     if (!result.success) {
-      const newErrors: { [key: string]: string } = {}; // Initialize object to store new validation errors
+      const newErrors: { [key: string]: string } = {};
       result.error.issues.forEach((issue) => {
-        newErrors[issue.path[0] as string] = issue.message; // Map validation issues to corresponding field errors
+        newErrors[issue.path[0] as string] = issue.message;
       });
-      setErrors(newErrors); // Update state with validation errors
+      setErrors(newErrors);
     } else {
-      setErrors({}); // Clear errors if validation succeeds
-      console.log('Form submitted:', formData); // Log successful form data to console for debugging
+      setErrors({});
+      try {
+        console.log('Form submitted:', formData);
+  
+        const response = await axios.post('http://localhost:3002/api/users/signup', {
+          fullName: formData.fullName,
+          age: Number(formData.age),
+          email: formData.email,
+          cellNumber: formData.cellNumber,
+          password: formData.password,
+        });
+  
+        console.log('✅ User created:', response.data);
+        alert('Verify code');
+  
+      } catch (error: any) {
+        console.error('❌ Error creating user:', error.response?.data || error.message);
+        alert('Error: ' + (error.response?.data?.message || error.message));
+      }
     }
   };
+  
 
   return (
     <form onSubmit={handleSubmit}>
