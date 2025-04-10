@@ -1,3 +1,5 @@
+import React from 'react';
+
 const Footer = () => {
     return (
       <footer className="bg-black text-gray-300 border-t-4 border-gray-600 py-4 text-center uppercase tracking-wider font-mono text-sm">
@@ -7,4 +9,5 @@ const Footer = () => {
   };
   
   export default Footer;
+  
   
