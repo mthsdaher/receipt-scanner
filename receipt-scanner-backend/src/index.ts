@@ -1,4 +1,3 @@
-// src/index.ts
 import express from 'express';
 import userRoutes from './routes/userRoutes';
 import receiptRoutes from './routes/userRoutes';

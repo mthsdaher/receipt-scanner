@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import mongoose from 'mongoose';
 import User from '../models/User';
 import connectDB from '../config/database';
@@ -9,6 +10,7 @@ const users = [
     age: 27,
     email: 'mthsv@example.com',
     cellNumber: '+14376603333',
+    password: 'test123*'
   },
 ];
 

@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Signin from './pages//Signin/Signin';
-import Signup from './pages/Signup/Signup';
-import Dashboard from './pages/Dashboard/Dashboard';
-import Signout from './pages//Signout/Signout';
-import Home from './pages//Home/Home';
+import Signin from './pages/Signin/Signin.tsx';
+import Signup from './pages/Signup/Signup.tsx';
+import Dashboard from './pages/Dashboard/Dashboard.tsx';
+import Signout from './pages/Signout/Signout.tsx';
+import Home from './pages/Home/Home.tsx';
 
 // Main application component
 const App = () => {
