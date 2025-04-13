@@ -1,24 +1,41 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules/
-/.pnp
-.pnp.js
-yarn.lock
-
-# testing
-/coverage
-
-# production
-/build
-
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
+# === Node.js ===
+node_modules/
+dist/
+.env
+uploads/
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# === TypeScript ===
+*.tsbuildinfo
+
+# === React ===
+build/
+.cache/
+.vite/
+
+# === Python ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+env/
+venv/
+ocr_output/
+ocr_service/__pycache__/
+ocr_service/temp_*.jpg
+
+# === IDEs and OS ===
+.vscode/
+.DS_Store
+Thumbs.db
+
+# === Others ===
+*.bak
+*.swp
+*.tmp

@@ -6,6 +6,7 @@ import path from 'path';
 import cors from 'cors';
 import 'dotenv/config'; 
 import connectDB from './config/database';
+import ocrProxy from './routes/ocrProxy'; // Import the OCR proxy routes
 
 const app = express();
 
@@ -27,14 +28,17 @@ app.use('/api/users', userRoutes);
 
 app.use('/api/receipts', receiptRoutes);
 
+// Mount OCR proxy routes
+app.use('/api/paddle', ocrProxy);
+
 // Start the server
 const PORT = process.env.PORT || 3002;
 
 connectDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`✅ Server running at http://localhost:${PORT}`);
-    console.log(`✅ Swagger UI available at http://localhost:${PORT}/api-docs`);
+    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`Swagger UI available at http://localhost:${PORT}/api-docs`);
   });
 }).catch((err) => {
-  console.error('❌ Failed to start server:', err);
+  console.error('Failed to start server:', err);
 });
