@@ -19,7 +19,7 @@ router.post(
 );
 
 // GET /api/receipts/:userId - List all receipts for a user
-router.get('/:userId', getUserReceipts);
+router.get('/:userId', currentUser, getUserReceipts);
 
 // Simulated OCR scan
 router.post('/scan', scanReceipt);

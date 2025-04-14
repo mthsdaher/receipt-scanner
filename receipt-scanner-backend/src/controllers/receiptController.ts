@@ -55,20 +55,25 @@ export const createReceipt = async (
   }
 };
 
-// Controller to list all receipts for a user
+// Controller to list all receipts for a user (secured)
 export const getUserReceipts = async (req: Request, res: Response) => {
   try {
-    // Extract userId from URL parameter
-    const userId = req.params.userId;
-    // Fetch all receipts for the user, sorted by date in descending order
-    const receipts = await Receipt.find({ userId }).sort({ date: -1 });
+    const currentUser = req.currentUser;
+    const requestedUserId = req.params.userId;
+
+    if (!currentUser || currentUser.id !== requestedUserId) {
+      res.status(403).json({ message: 'Forbidden: You cannot view receipts of other users.' });
+      return;
+    }
+
+    const receipts = await Receipt.find({ userId: requestedUserId }).sort({ date: -1 });
     res.json(receipts);
   } catch (error) {
-    // Log any errors and return a server error response
     console.error('Error fetching receipts:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 // Controller to scan and process a receipt image
 export const scanReceipt = async (req: Request, res: Response) => {
