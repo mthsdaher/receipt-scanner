@@ -29,6 +29,7 @@ venv/
 ocr_output/
 ocr_service/__pycache__/
 ocr_service/temp_*.jpg
+notes.txt
 
 # === IDEs and OS ===
 .vscode/
