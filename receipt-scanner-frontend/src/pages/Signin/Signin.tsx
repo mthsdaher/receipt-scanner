@@ -4,7 +4,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
-import Layout from '../../components/Layout.tsx';
+import Layout from '../../components/Layout';
 
 const signinSchema = z.object({
   email: z.string().email('Invalid email address'),

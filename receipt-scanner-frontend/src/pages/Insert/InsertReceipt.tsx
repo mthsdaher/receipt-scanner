@@ -1,8 +1,7 @@
-// pages/InsertReceipt.tsx
 import React, { useState, useEffect } from "react";
-import Layout from "../../components/Layout";
-import { extractReceiptData, ParsedReceipt } from "../../utils/dataExtractor";
-  import { jwtDecode } from "jwt-decode";
+import Layout from "@components/Layout";
+import { extractReceiptData, ParsedReceipt } from "@utils/dataExtractor";
+import { jwtDecode } from "jwt-decode";
 
 const InsertReceipt: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);

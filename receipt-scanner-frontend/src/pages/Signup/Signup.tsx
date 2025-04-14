@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { z } from 'zod';
-import Layout from '../../components/Layout.tsx';
+import Layout from '../../components/Layout';
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
 const cellNumberRegex = /^\d+$/;

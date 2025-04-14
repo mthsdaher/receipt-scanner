@@ -1,13 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
-import Signin from './pages/Signin/Signin.tsx';
-import Signup from './pages/Signup/Signup.tsx';
-import InsertReceipt from './pages/Insert/InsertReceipt.tsx';
-import Dashboard from './pages/Dashboard/Dashboard.tsx';
-import Signout from './pages/Signout/Signout.tsx';
-import Home from './pages/Home/Home.tsx';
-import Navbar from './components/Navbar.tsx'; 
+import Signin from './pages/Signin/Signin';
+import Signup from './pages/Signup/Signup';
+import InsertReceipt from './pages/Insert/InsertReceipt';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Signout from './pages/Signout/Signout';
+import Home from './pages/Home/Home';
+import Navbar from './components/Navbar'; 
 
 const App = () => {
   return (

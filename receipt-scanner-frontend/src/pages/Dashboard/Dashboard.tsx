@@ -1,6 +1,6 @@
 // src/pages/Dashboard/Dashboard.tsx
 import React, { useState } from "react";
-import Layout from "../../components/Layout.tsx";
+import Layout from "../../components/Layout";
 
 interface ReceiptData {
   seller: string;
