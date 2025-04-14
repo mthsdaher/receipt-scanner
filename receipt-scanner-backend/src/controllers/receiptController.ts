@@ -19,21 +19,25 @@ export const createReceipt = async (
 
   try {
     // Extract receipt data from the request body
-    const { userId, amount, date, description, category } = req.body;
+    const currentUser = req.currentUser;
+    if(!currentUser || !currentUser.id) {
+      res.status(401).json({ message: 'Unauthorized. Token missing or invalid' });
+      return;
+    }
 
-    // Verify the user exists in the database
-    const user = await User.findById(userId);
+    const { amount, date, description, category } = req.body;
+
+    const user = await User.findById(currentUser.id);
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
     }
 
     // Calculate the total value assuming 'amount' is the product value and 'taxes' (not provided) is a fixed rate or needs to be derived
-    const totalValue = calculateReceiptTotal(amount, 10); // Example: 10% tax rate; adjust based on your data structure
+    const totalValue = calculateReceiptTotal(amount, 13); // Example: 10% tax rate; adjust based on your data structure
 
     // Create and save the new receipt with calculated total value
     const receipt = new Receipt({
-      userId,
       amount, // Store the original amount (product value)
       totalValue, // Store the calculated total value
       date,

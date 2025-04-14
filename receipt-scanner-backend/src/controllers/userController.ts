@@ -13,7 +13,7 @@ const { validationResult } = require('express-validator');
 export const signup = async (req: Request, res: Response): Promise<void> => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    res.status(400).json({ status: 'error', errors: errors.array() });
+    res.status(400).json({ status: 'error', errors: errors.array( ) });
     return;
   }
 

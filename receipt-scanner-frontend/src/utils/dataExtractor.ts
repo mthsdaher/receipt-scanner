@@ -1,5 +1,3 @@
-// utils/dataExtractor.ts
-
 export interface ParsedReceipt {
   company: string | null;
   address: string | null;
