@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const Container = styled.div`
   max-width: 500px;
@@ -36,4 +36,26 @@ export const Button = styled.button`
 export const ErrorText = styled.p`
   color: red;
   margin-top: 1rem;
+  text-align: center;
+`;
+
+// nova mensagem verde para status
+export const InfoText = styled.p`
+  color: #2e7d32;
+  margin-top: 1rem;
+  text-align: center;
+`;
+
+// botão de reenvio estilizado
+export const ResendButton = styled.button`
+  display: block;
+  margin: 0.5rem auto 0;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;

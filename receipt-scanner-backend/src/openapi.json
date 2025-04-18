@@ -1,470 +1,105 @@
 {
-    "openapi": "3.0.3",
-    "info": {
-      "title": "Receipt Scanner API",
-      "description": "API for managing users in the Receipt Scanner application",
-      "version": "1.0.0",
-      "contact": {
-        "email": "mthsvdaher@gmail.com"
-      }
-    },
-    "paths": {
-      "/api/users/signup": {
-        "post": {
-          "summary": "Register a new user",
-          "description": "Creates a new user with pending activation status. Use the validate-code endpoint to manually activate the user.",
-          "requestBody": {
-            "required": true,
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Receipt Scanner API",
+    "description": "API for managing users in the Receipt Scanner application",
+    "version": "1.0.0",
+    "contact": {
+      "email": "mthsvdaher@gmail.com"
+    }
+  },
+  "paths": {
+    "/api/users/signup": {
+      "post": {
+        "summary": "Register a new user",
+        "description": "Creates a new user with pending activation status. Use the validate-code endpoint to manually activate the user.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": { "type": "string", "example": "Simple User" },
+                  "age": { "type": "number", "example": 25 },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "simpleuser@example.com"
+                  },
+                  "cellNumber": {
+                    "type": "string",
+                    "example": "+551111111111"
+                  },
+                  "password": { "type": "string", "example": "SimpleP@ss123" }
+                },
+                "required": [
+                  "fullName",
+                  "age",
+                  "email",
+                  "cellNumber",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "fullName": { "type": "string", "example": "Simple User" },
-                    "age": { "type": "number", "example": 25 },
-                    "email": { "type": "string", "format": "email", "example": "simpleuser@example.com" },
-                    "cellNumber": { "type": "string", "example": "+551111111111" },
-                    "password": { "type": "string", "example": "SimpleP@ss123" }
-                  },
-                  "required": ["fullName", "age", "email", "cellNumber", "password"]
-                }
-              }
-            }
-          },
-          "responses": {
-            "201": {
-              "description": "User created successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "success" },
-                      "message": { "type": "string", "example": "User created. Manually verify the user by setting status to 'Active' in the database or via API (e.g., validateCode endpoint)." },
-                      "user": {
-                        "type": "object",
-                        "properties": {
-                          "fullName": { "type": "string", "example": "Simple User" },
-                          "age": { "type": "number", "example": 25 },
-                          "email": { "type": "string", "example": "simpleuser@example.com" },
-                          "cellNumber": { "type": "string", "example": "+551111111111" },
-                          "verificationCode": { "type": "string", "example": "1234" }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "400": {
-              "description": "Bad request (validation errors or email already registered)",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "errors": { "type": "array", "items": { "type": "object" }, "example": [{"msg": "Full name is required"}] },
-                      "message": { "type": "string", "example": "Email already registered" }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/users/login": {
-        "post": {
-          "summary": "Login an existing user",
-          "description": "Logs in an existing user, returning a JWT token if the user is activated.",
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "email": { "type": "string", "format": "email", "example": "simpleuser@example.com" },
-                    "password": { "type": "string", "example": "SimpleP@ss123" }
-                  },
-                  "required": ["email", "password"]
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "User logged in successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "user": {
-                        "type": "object",
-                        "properties": {
-                          "fullName": { "type": "string", "example": "Simple User" },
-                          "age": { "type": "number", "example": 25 },
-                          "email": { "type": "string", "example": "simpleuser@example.com" },
-                          "cellNumber": { "type": "string", "example": "+551111111111" }
-                        }
-                      },
-                      "token": { "type": "string", "example": "your-jwt-token-here" }
-                    }
-                  }
-                }
-              }
-            },
-            "400": {
-              "description": "Invalid credentials",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "Invalid credentials" }
-                    }
-                  }
-                }
-              }
-            },
-            "403": {
-              "description": "Account not activated",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "Account not activated. Please verify your account manually." }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/users": {
-        "get": {
-          "summary": "List all users",
-          "description": "Retrieve a list of all users (requires JWT authentication)",
-          "security": [
-            {
-              "BearerAuth": []
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "List of users",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "array",
-                    "items": {
+                    "status": { "type": "string", "example": "success" },
+                    "message": {
+                      "type": "string",
+                      "example": "User created. Manually verify the user by setting status to 'Active' in the database or via API (e.g., validateCode endpoint)."
+                    },
+                    "user": {
                       "type": "object",
                       "properties": {
-                        "fullName": { "type": "string", "example": "Simple User" },
+                        "fullName": {
+                          "type": "string",
+                          "example": "Simple User"
+                        },
                         "age": { "type": "number", "example": 25 },
-                        "email": { "type": "string", "example": "simpleuser@example.com" },
-                        "cellNumber": { "type": "string", "example": "+551111111111" },
-                        "status": { "type": "string", "example": "Active" }
+                        "email": {
+                          "type": "string",
+                          "example": "simpleuser@example.com"
+                        },
+                        "cellNumber": {
+                          "type": "string",
+                          "example": "+551111111111"
+                        },
+                        "verificationCode": {
+                          "type": "string",
+                          "example": "1234"
+                        }
                       }
                     }
                   }
                 }
               }
-            },
-            "401": {
-              "description": "Unauthorized (missing or invalid JWT)",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "Not authenticated" }
-                    }
-                  }
-                }
-              }
             }
-          }
-        }
-      },
-      "/api/users/deleteUser": {
-        "delete": {
-          "summary": "Delete the current authenticated user",
-          "description": "Deletes the user associated with the provided JWT token (only if activated)",
-          "security": [
-            {
-              "BearerAuth": []
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "User deleted successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "success" },
-                      "message": { "type": "string", "example": "User deleted successfully" }
-                    }
-                  }
-                }
-              }
-            },
-            "401": {
-              "description": "Unauthorized (missing or invalid JWT)",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "Not authenticated" }
-                    }
-                  }
-                }
-              }
-            },
-            "403": {
-              "description": "Account not activated",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "Account not activated. Cannot delete." }
-                    }
-                  }
-                }
-              }
-            },
-            "404": {
-              "description": "User not found",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "User not found" }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/users/requestPasswordReset": {
-        "post": {
-          "summary": "Request a password reset",
-          "description": "Generates a password reset token for the user (only if activated). Token is logged to the server console for manual use.",
-          "requestBody": {
-            "required": true,
+          },
+          "400": {
+            "description": "Bad request (validation errors or email already registered)",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "email": { "type": "string", "format": "email", "example": "simpleuser@example.com" }
-                  },
-                  "required": ["email"]
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Password reset token generated successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "success" },
-                      "message": { "type": "string", "example": "Password reset token generated. Check server logs for the token." }
-                    }
-                  }
-                }
-              }
-            },
-            "404": {
-              "description": "User not found",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "User not found" }
-                    }
-                  }
-                }
-              }
-            },
-            "403": {
-              "description": "Account not activated",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "Account not activated. Cannot request password reset." }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/users/passwordReset": {
-        "post": {
-          "summary": "Reset a user's password",
-          "description": "Resets the user's password using the provided reset token (only if activated).",
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "email": { "type": "string", "format": "email", "example": "simpleuser@example.com" },
-                    "newPassword": { "type": "string", "example": "NewP@ss123" },
-                    "resetToken": { "type": "string", "example": "abcdefgh1234567890abcdef..." }
-                  },
-                  "required": ["email", "newPassword", "resetToken"]
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Password reset successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "success" },
-                      "message": { "type": "string", "example": "Password reset successfully" }
-                    }
-                  }
-                }
-              }
-            },
-            "400": {
-              "description": "Invalid or expired reset token",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "Invalid or expired reset token" }
-                    }
-                  }
-                }
-              }
-            },
-            "404": {
-              "description": "User not found",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "User not found" }
-                    }
-                  }
-                }
-              }
-            },
-            "403": {
-              "description": "Account not activated",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "Account not activated. Cannot reset password." }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/users/validate-code": {
-        "post": {
-          "summary": "Manually validate a user",
-          "description": "Manually validates a user using a verification code, activating their account and returning a JWT token.",
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "email": { "type": "string", "format": "email", "example": "simpleuser@example.com" },
-                    "code": { "type": "string", "example": "1234" }
-                  },
-                  "required": ["email", "code"]
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "User validated and account activated",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "success" },
-                      "message": { "type": "string", "example": "Code validated. Account activated." },
-                      "token": { "type": "string", "example": "your-jwt-token-here" }
-                    }
-                  }
-                }
-              }
-            },
-            "400": {
-              "description": "Invalid or expired code",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "Invalid code" }
-                    }
-                  }
-                }
-              }
-            },
-            "401": {
-              "description": "Invalid email",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "string", "example": "error" },
-                      "message": { "type": "string", "example": "Invalid email" }
+                    "status": { "type": "string", "example": "error" },
+                    "errors": {
+                      "type": "array",
+                      "items": { "type": "object" },
+                      "example": [{ "msg": "Full name is required" }]
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Email already registered"
                     }
                   }
                 }
@@ -474,19 +109,446 @@
         }
       }
     },
-    "components": {
-      "securitySchemes": {
-        "BearerAuth": {
-          "type": "http",
-          "scheme": "bearer",
-          "bearerFormat": "JWT",
-          "description": "JWT token for authentication. Include in the Authorization header as 'Bearer <token>'"
+    "/api/users/login": {
+      "post": {
+        "summary": "Login an existing user",
+        "description": "Logs in an existing user, returning a JWT token if the user is activated.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "simpleuser@example.com"
+                  },
+                  "password": { "type": "string", "example": "SimpleP@ss123" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User logged in successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "fullName": {
+                          "type": "string",
+                          "example": "Simple User"
+                        },
+                        "age": { "type": "number", "example": 25 },
+                        "email": {
+                          "type": "string",
+                          "example": "simpleuser@example.com"
+                        },
+                        "cellNumber": {
+                          "type": "string",
+                          "example": "+551111111111"
+                        }
+                      }
+                    },
+                    "token": {
+                      "type": "string",
+                      "example": "your-jwt-token-here"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "message": {
+                      "type": "string",
+                      "example": "Invalid credentials"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account not activated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "message": {
+                      "type": "string",
+                      "example": "Account not activated. Please verify your account manually."
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
-    "security": [
-      {
-        "BearerAuth": []
+    "/api/users": {
+      "get": {
+        "summary": "List all users",
+        "description": "Retrieve a list of all users (requires JWT authentication)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "fullName": {
+                        "type": "string",
+                        "example": "Simple User"
+                      },
+                      "age": { "type": "number", "example": 25 },
+                      "email": {
+                        "type": "string",
+                        "example": "simpleuser@example.com"
+                      },
+                      "cellNumber": {
+                        "type": "string",
+                        "example": "+551111111111"
+                      },
+                      "status": { "type": "string", "example": "Active" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (missing or invalid JWT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "message": {
+                      "type": "string",
+                      "example": "Not authenticated"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
-    ]
-  }
+    },
+    "/api/users/deleteUser": {
+      "delete": {
+        "summary": "Delete a user by email",
+        "description": "Deletes any user (independent of status) by their email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" }
+                },
+                "required": ["email"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User deleted successfully" },
+          "400": { "description": "Email is required" },
+          "404": { "description": "User not found" },
+          "500": { "description": "Server error" }
+        }
+      }
+    }
+  },
+  "/api/users/requestPasswordReset": {
+    "post": {
+      "summary": "Request a password reset",
+      "description": "Generates a password reset token for the user (only if activated). Token is logged to the server console for manual use.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "simpleuser@example.com"
+                }
+              },
+              "required": ["email"]
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Password reset token generated successfully",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "example": "success" },
+                  "message": {
+                    "type": "string",
+                    "example": "Password reset token generated. Check server logs for the token."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "User not found",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "example": "error" },
+                  "message": { "type": "string", "example": "User not found" }
+                }
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Account not activated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "example": "error" },
+                  "message": {
+                    "type": "string",
+                    "example": "Account not activated. Cannot request password reset."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/users/passwordReset": {
+    "post": {
+      "summary": "Reset a user's password",
+      "description": "Resets the user's password using the provided reset token (only if activated).",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "simpleuser@example.com"
+                },
+                "newPassword": { "type": "string", "example": "NewP@ss123" },
+                "resetToken": {
+                  "type": "string",
+                  "example": "abcdefgh1234567890abcdef..."
+                }
+              },
+              "required": ["email", "newPassword", "resetToken"]
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Password reset successfully",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "example": "success" },
+                  "message": {
+                    "type": "string",
+                    "example": "Password reset successfully"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Invalid or expired reset token",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "example": "error" },
+                  "message": {
+                    "type": "string",
+                    "example": "Invalid or expired reset token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "User not found",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "example": "error" },
+                  "message": { "type": "string", "example": "User not found" }
+                }
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Account not activated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "example": "error" },
+                  "message": {
+                    "type": "string",
+                    "example": "Account not activated. Cannot reset password."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/users/validate-code": {
+    "post": {
+      "summary": "Manually validate a user",
+      "description": "Manually validates a user using a verification code, activating their account and returning a JWT token.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "simpleuser@example.com"
+                },
+                "code": { "type": "string", "example": "1234" }
+              },
+              "required": ["email", "code"]
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "User validated and account activated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "example": "success" },
+                  "message": {
+                    "type": "string",
+                    "example": "Code validated. Account activated."
+                  },
+                  "token": {
+                    "type": "string",
+                    "example": "your-jwt-token-here"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Invalid or expired code",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "example": "error" },
+                  "message": { "type": "string", "example": "Invalid code" }
+                }
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Invalid email",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "example": "error" },
+                  "message": { "type": "string", "example": "Invalid email" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token for authentication. Include in the Authorization header as 'Bearer <token>'"
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ]
+}

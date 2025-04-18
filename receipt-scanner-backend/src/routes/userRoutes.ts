@@ -1,4 +1,3 @@
-// src/routes/userRoutes.ts
 import { Router } from "express";
 import {
   signup,
@@ -8,19 +7,21 @@ import {
   passwordReset,
   requestPasswordReset,
   validateCode,
-  resendVerificationCode, 
+  resendVerificationCode,
 } from "../controllers/userController";
 import { currentUser } from "../middleware/current-user";
 
 const { check } = require("express-validator");
-
 const router = Router();
 
+// POST /api/users/signup
 router.post(
   "/signup",
   [
     check("fullName").notEmpty().withMessage("Full name is required"),
-    check("age").isNumeric().withMessage("Age must be a number"),
+    check("age")
+      .isInt({ min: 0 })
+      .withMessage("Age must be a non‑negative integer"),
     check("email").isEmail().withMessage("Valid email is required"),
     check("cellNumber")
       .notEmpty()
@@ -30,17 +31,15 @@ router.post(
     check("password")
       .isLength({ min: 8 })
       .withMessage("Password must be at least 8 characters")
-      .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/
-      )
+      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).+$/)
       .withMessage(
-        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (!@#$%^&*)"
+        "Password must include uppercase, lowercase, number and special char"
       ),
   ],
   signup
 );
 
-// POST /api/users/login - Login an existing user
+// POST /api/users/login
 router.post(
   "/login",
   [
@@ -50,20 +49,24 @@ router.post(
   login
 );
 
-// GET /api/users - List all users
+// GET /api/users
 router.get("/", getUsers);
 
-// DELETE /api/users/deleteUser - Delete the current authenticated user (updated from /me)
-router.delete("/deleteUser", currentUser, deleteUser);
+// DELETE /api/users/deleteUser
+router.delete(
+  "/deleteUser",
+  [check("email").isEmail().withMessage("Valid email is required")],
+  deleteUser
+);
 
-// POST /api/users/reset-request - Request a password reset
+// POST /api/users/reset-request
 router.post(
   "/reset-request",
   [check("email").isEmail().withMessage("Valid email is required")],
   requestPasswordReset
 );
 
-// POST /api/users/reset-password - Reset a user's password
+// POST /api/users/reset-password
 router.post(
   "/reset-password",
   [
@@ -71,32 +74,32 @@ router.post(
     check("newPassword")
       .isLength({ min: 8 })
       .withMessage("New password must be at least 8 characters")
-      .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/
-      )
+      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).+$/)
       .withMessage(
-        "New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (!@#$%^&*)"
+        "New password must include uppercase, lowercase, number and special char"
       ),
     check("resetToken").notEmpty().withMessage("Reset token is required"),
   ],
   passwordReset
 );
 
-// POST /api/users/resend-code - Resend verification code to user email
+// POST /api/users/resend-code
 router.post(
-  '/resend-code',
-  [
-    check('email').isEmail().withMessage('Valid email is required'),
-  ],
+  "/resend-code",
+  [check("email").isEmail().withMessage("Valid email is required")],
   resendVerificationCode
 );
 
-// POST /api/users/validate-code - Validate the verification code
+// POST /api/users/validate-code
 router.post(
   "/validate-code",
   [
     check("email").isEmail().withMessage("Valid email is required"),
-    check("code").notEmpty().withMessage("Verification code is required"),
+    check("code")
+      .isLength({ min: 6, max: 6 })
+      .withMessage("Code must be 6 digits")
+      .isNumeric()
+      .withMessage("Code must contain only numbers"),
   ],
   validateCode
 );
