@@ -6,6 +6,7 @@ import { Password } from '../utils/password';
 import crypto from 'crypto'; // For generating reset tokens
 import { generateVerificationCode } from '../utils/verificationCode';
 import { UserStatus } from '../models/User';
+import nodemailer from 'nodemailer';
 
 const { validationResult } = require('express-validator');
 
@@ -132,6 +133,68 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({ status: 'error', message: 'Server error' });
   }
 };
+
+export async function sendVerificationEmail(email: string, code: string) {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_PASSWORD
+    }
+  });
+
+  await transporter.sendMail({
+    from: `"Receipt Scanner" <${process.env.SMTP_EMAIL}>`,
+    to: email,
+    subject: 'Verify your Receipt Scanner account',
+    html: `
+      <p>Hello!</p>
+      <p>Your verification code is: <strong>${code}</strong></p>
+      <p>This code is valid for <strong>5 minutes</strong>.</p>
+      <p>If it expires, you can request a new code from the login screen.</p>
+    `
+  });
+}
+
+export const resendVerificationCode = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({ status: 'error', message: 'Email is required' });
+      return;
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(404).json({ status: 'error', message: 'User not found' });
+      return;
+    }
+
+    if (user.status === UserStatus.Active) {
+      res.status(400).json({ status: 'error', message: 'User already activated' });
+      return;
+    }
+
+    const newCode = generateVerificationCode(); // you can reuse your existing helper
+    const expiration = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    user.verifCd = newCode;
+    user.expDt = expiration;
+    await user.save();
+
+    await sendVerificationEmail(user.email, newCode); // <-- implement this
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Verification code resent. Please check your email.',
+    });
+  } catch (err) {
+    console.error('Error resending code:', err);
+    res.status(500).json({ status: 'error', message: 'Server error' });
+  }
+};
+
 
 // Controller to reset a user's password (only if activated)
 export const passwordReset = async (req: Request, res: Response): Promise<void> => {
