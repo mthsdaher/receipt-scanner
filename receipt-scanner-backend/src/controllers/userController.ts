@@ -279,35 +279,43 @@ export const resendVerificationCode = async (
   }
 };
 
-/**
- * Controller to manually validate a user
- */
-export const validateCode = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const validateCode = async (req: Request, res: Response): Promise<void> => {
+  // Validate input
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ status: "error", errors: errors.array() });
+    return;
+  }
+
   try {
     const { email, code } = req.body;
-    if (!email || !code) {
-      res
-        .status(400)
-        .json({ status: "error", message: "Email and code are required" });
-      return;
-    }
 
+    // 1. Find the user
     const user = await User.findOne({ email });
-    if (!user || user.verifCd !== code) {
+    if (!user) {
       res.status(400).json({ status: "error", message: "Invalid email or code" });
       return;
     }
-    if (new Date() > (user.expDt as Date)) {
+
+    // 2. Check code match
+    if (user.verifCd !== code) {
+      res.status(400).json({ status: "error", message: "Invalid email or code" });
+      return;
+    }
+
+    // 3. Check expiration
+    if (!user.expDt || new Date() > user.expDt) {
       res.status(400).json({ status: "error", message: "Code expired" });
       return;
     }
 
-    user.status = UserStatus.Active;
-    await user.save();
+    // 4. Activate if still pending
+    if (user.status === UserStatus.Pending_Activation) {
+      user.status = UserStatus.Active;
+      await user.save();
+    }
 
+    // 5. Issue JWT
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET || "your-secret-key",
@@ -316,7 +324,7 @@ export const validateCode = async (
 
     res.status(200).json({
       status: "success",
-      message: "Account activated.",
+      message: "Account activated",
       token,
     });
   } catch (error) {

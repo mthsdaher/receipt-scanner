@@ -97,9 +97,7 @@ router.post(
     check("email").isEmail().withMessage("Valid email is required"),
     check("code")
       .isLength({ min: 6, max: 6 })
-      .withMessage("Code must be 6 digits")
-      .isNumeric()
-      .withMessage("Code must contain only numbers"),
+      .withMessage("Code must be 6 characters"),
   ],
   validateCode
 );
