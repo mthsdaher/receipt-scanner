@@ -279,56 +279,50 @@ export const resendVerificationCode = async (
   }
 };
 
+/**
+ * POST /api/users/validate-code
+ * - Verifies that the supplied code matches what was emailed.
+ * - Activates the user if valid.
+ * - Returns a JWT so the frontend can stay logged in.
+ */
 export const validateCode = async (req: Request, res: Response): Promise<void> => {
-  // Validate input
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    res.status(400).json({ status: "error", errors: errors.array() });
+  const { email, code } = req.body;
+
+  // 1. Find user by email
+  const user = await User.findOne({ email });
+  if (!user) {
+    res.status(400).json({ status: "error", message: "Invalid email or code" });
     return;
   }
 
-  try {
-    const { email, code } = req.body;
-
-    // 1. Find the user
-    const user = await User.findOne({ email });
-    if (!user) {
-      res.status(400).json({ status: "error", message: "Invalid email or code" });
-      return;
-    }
-
-    // 2. Check code match
-    if (user.verifCd !== code) {
-      res.status(400).json({ status: "error", message: "Invalid email or code" });
-      return;
-    }
-
-    // 3. Check expiration
-    if (!user.expDt || new Date() > user.expDt) {
-      res.status(400).json({ status: "error", message: "Code expired" });
-      return;
-    }
-
-    // 4. Activate if still pending
-    if (user.status === UserStatus.Pending_Activation) {
-      user.status = UserStatus.Active;
-      await user.save();
-    }
-
-    // 5. Issue JWT
-    const token = jwt.sign(
-      { id: user._id, email: user.email },
-      process.env.JWT_SECRET || "your-secret-key",
-      { expiresIn: "1h" }
-    );
-
-    res.status(200).json({
-      status: "success",
-      message: "Account activated",
-      token,
-    });
-  } catch (error) {
-    console.error("Error validating verification code:", error);
-    res.status(500).json({ status: "error", message: "Server error" });
+  // 2. Check code match
+  if (user.verifCd !== code) {
+    res.status(400).json({ status: "error", message: "Invalid email or code" });
+    return;
   }
+
+  // 3. Check expiration
+  if (!user.expDt || new Date() > user.expDt) {
+    res.status(400).json({ status: "error", message: "Code expired" });
+    return;
+  }
+
+  // 4. Activate account
+  user.status = UserStatus.Active;
+  user.verifCd = undefined;
+  user.expDt = undefined;
+  await user.save();
+
+  // 5. Issue JWT
+  const token = jwt.sign(
+    { id: user._id, email: user.email },
+    process.env.JWT_SECRET || "your-secret-key",
+    { expiresIn: "1h" }
+  );
+
+  res.status(200).json({
+    status: "success",
+    message: "Account activated",
+    token,
+  });
 };

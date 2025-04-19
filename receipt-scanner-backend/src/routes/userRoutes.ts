@@ -90,14 +90,13 @@ router.post(
   resendVerificationCode
 );
 
-// POST /api/users/validate-code
 router.post(
   "/validate-code",
   [
     check("email").isEmail().withMessage("Valid email is required"),
     check("code")
       .isLength({ min: 6, max: 6 })
-      .withMessage("Code must be 6 characters"),
+      .withMessage("Code must be 6 digits"),
   ],
   validateCode
 );
