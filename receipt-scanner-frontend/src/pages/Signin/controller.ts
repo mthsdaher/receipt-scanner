@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UseSigninControllerReturn } from './types';
+import { useAuth } from 'contexts/AuthContext';
 
 export const useSigninController = (): UseSigninControllerReturn => {
   const [email, setEmail] = useState('');
@@ -12,8 +13,9 @@ export const useSigninController = (): UseSigninControllerReturn => {
   const [allowResend, setAllowResend] = useState(true);
 
   const navigate = useNavigate();
+  const { signIn } = useAuth(); // useAuth hook to manage authentication state
 
-  // 1. Countdown effect: decrement timer every second
+  // countdown effect: decrement timer every second
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (timer > 0) {
@@ -24,20 +26,20 @@ export const useSigninController = (): UseSigninControllerReturn => {
     return () => clearInterval(interval);
   }, [timer, allowResend]);
 
-  // 2. Format seconds into MM:SS
+  // format seconds into MM:SS
   const formattedTimer = useMemo(() => {
     const m = Math.floor(timer / 60).toString().padStart(2, '0');
     const s = (timer % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   }, [timer]);
 
-  // 3. Handle input changes
+  // handle input changes
   const handleChange = (field: 'email' | 'password') => (e: React.ChangeEvent<HTMLInputElement>) => {
     if (field === 'email') setEmail(e.target.value);
     else setPassword(e.target.value);
   };
 
-  // 4. Login submission
+  // login submission
   const handleSubmit = async () => {
     setError('');
     try {
@@ -49,7 +51,6 @@ export const useSigninController = (): UseSigninControllerReturn => {
       const data = await res.json();
 
       if (!res.ok) {
-        // if account not activated, trigger UI to allow resending
         if (data.message === 'Account not activated') {
           setError('Account not activated. Please verify your account.');
         } else {
@@ -58,8 +59,10 @@ export const useSigninController = (): UseSigninControllerReturn => {
         return;
       }
 
-      // on success, store token and redirect
-      localStorage.setItem('token', data.token);
+      // substituído:
+      // localStorage.setItem('token', data.token);
+      signIn(data.token);
+
       navigate('/dashboard');
     } catch (err) {
       console.error('Login error:', err);
@@ -67,7 +70,7 @@ export const useSigninController = (): UseSigninControllerReturn => {
     }
   };
 
-  // 5. Resend verification code
+  // resend verification code
   const handleResend = async () => {
     setError('');
     setAllowResend(false);

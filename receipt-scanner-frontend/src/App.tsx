@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
 import Signin from './pages/Signin';
 import Signup from './pages/Signup';
@@ -10,12 +10,11 @@ import Home from './pages/Home';
 import Navbar from './components/Navbar'; 
 import VerificationCode from "./pages/VerificationCode";
 
-const App = () => {
-  return (
-    <Router>
-      <Navbar /> 
-        <Routes>
-        <Route path="/" element={<Home />} />
+const App: React.FC = () => (
+  <>
+    <Navbar />
+    <Routes>
+    <Route path="/" element={<Home />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify-code" element={<VerificationCode />} />
@@ -23,9 +22,8 @@ const App = () => {
         <Route path="/historic" element={<div>Historic Page (To Be Implemented)</div>} />
         <Route path="/insert-receipt" element={<InsertReceipt />} />
         <Route path="/signout" element={<Signout />} />
-      </Routes>
-    </Router>
-  );
-};
+    </Routes>
+  </>
+);
 
 export default App;

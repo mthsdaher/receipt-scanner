@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { UseVerificationControllerReturn } from './types';
 
 export const useVerificationController = (): UseVerificationControllerReturn => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   // retrieve email passed via state
   const email = (location.state as any)?.email as string;
@@ -63,8 +65,7 @@ export const useVerificationController = (): UseVerificationControllerReturn => 
       });
       const data = await res.json();
       if (res.ok) {
-        // assume backend returns a fresh token on verify
-        localStorage.setItem('token', data.token);
+        signIn(data.token);
         navigate('/', { replace: true });
       } else {
         setVerifyError(data.message || 'Invalid code');
