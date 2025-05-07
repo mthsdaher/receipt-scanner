@@ -38,7 +38,7 @@ const VerificationCode: React.FC = () => {
           onChange={(e) => setCodeInput(e.target.value)}
         />
 
-        <Button onClick={handleVerify} disabled={isVerifying || codeInput.length !== 6}>
+        <Button onClick={handleVerify} disabled={isVerifying || codeInput.length !== 4}>
           {isVerifying ? "Verifying..." : "Verify Code"}
         </Button>
 

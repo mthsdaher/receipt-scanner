@@ -36,4 +36,25 @@ export const Button = styled.button`
 export const ErrorText = styled.p`
   color: red;
   margin-top: 1rem;
+  text-align: center;
+`;
+
+export const ResendButton = styled.button`
+  display: block;
+  margin: 1rem auto;
+  background: none;
+  border: none;
+  color: #0b666a;
+  text-decoration: underline;
+  cursor: pointer;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+export const InfoText = styled.p`
+  text-align: center;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
 `;

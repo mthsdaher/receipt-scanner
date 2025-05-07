@@ -1,18 +1,58 @@
+import React from 'react';
 import Layout from '@components/Layout';
+import {
+  Container,
+  Title,
+  Input,
+  Button,
+  ErrorText,
+  ResendButton,
+  InfoText,
+} from './styles';
 import { useSigninController } from './controller';
-import { Container, Title, Input, Button, ErrorText } from './styles';
 
-const Signin = () => {
-  const { email, password, error, handleChange, handleSubmit } = useSigninController();
+const Signin: React.FC = () => {
+  const {
+    email,
+    password,
+    error,
+    allowResend,
+    formattedTimer,
+    handleChange,
+    handleSubmit,
+    handleResend,
+  } = useSigninController();
 
   return (
     <Layout>
       <Container>
         <Title>Sign In</Title>
-        <Input type="email" value={email} onChange={handleChange('email')} placeholder="Email" />
-        <Input type="password" value={password} onChange={handleChange('password')} placeholder="Password" />
+
+        <Input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={handleChange('email')}
+        />
+        <Input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={handleChange('password')}
+        />
+
         <Button onClick={handleSubmit}>Login</Button>
         {error && <ErrorText>{error}</ErrorText>}
+
+        {/* show resend only if login failed due to activation */}
+        {error === 'Account not activated. Please verify your account.' && (
+          <>
+            <InfoText>Didn't receive a code or it expired?</InfoText>
+            <ResendButton onClick={handleResend} disabled={!allowResend}>
+              {allowResend ? 'Resend Verification Code' : `Try again in ${formattedTimer}`}
+            </ResendButton>
+          </>
+        )}
       </Container>
     </Layout>
   );

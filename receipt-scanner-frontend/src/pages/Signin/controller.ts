@@ -1,49 +1,93 @@
-// Handles form state, API request and redirect after login
-
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UseSigninControllerReturn } from './types';
 
-// This custom hook encapsulates all logic for the Signin component
-export const useSigninController = () => {
-  // State variables to track input fields
+export const useSigninController = (): UseSigninControllerReturn => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const navigate = useNavigate(); // Enables redirecting the user after successful login
+  // countdown state for "Resend Code" button
+  const [timer, setTimer] = useState(0);
+  const [allowResend, setAllowResend] = useState(true);
 
-  // Handles input change dynamically for email or password
-  const handleChange = (field: 'email' | 'password') => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const navigate = useNavigate();
+
+  // 1. Countdown effect: decrement timer every second
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (timer > 0) {
+      interval = setInterval(() => setTimer(t => t - 1), 1000);
+    } else if (timer === 0 && !allowResend) {
+      setAllowResend(true);
+    }
+    return () => clearInterval(interval);
+  }, [timer, allowResend]);
+
+  // 2. Format seconds into MM:SS
+  const formattedTimer = useMemo(() => {
+    const m = Math.floor(timer / 60).toString().padStart(2, '0');
+    const s = (timer % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }, [timer]);
+
+  // 3. Handle input changes
+  const handleChange = (field: 'email' | 'password') => (e: React.ChangeEvent<HTMLInputElement>) => {
     if (field === 'email') setEmail(e.target.value);
     else setPassword(e.target.value);
   };
 
-  // Submits the form to the backend for authentication
+  // 4. Login submission
   const handleSubmit = async () => {
+    setError('');
     try {
-      const response = await fetch('http://localhost:3002/api/users/login', {
+      const res = await fetch('http://localhost:3002/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
+      const data = await res.json();
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Save JWT token to localStorage
-        localStorage.setItem('token', data.token);
-
-        // Redirect user to the dashboard
-        navigate('/dashboard');
-      } else {
-        // Show server-provided error or generic one
-        setError(data.message || 'Invalid credentials');
+      if (!res.ok) {
+        // if account not activated, trigger UI to allow resending
+        if (data.message === 'Account not activated') {
+          setError('Account not activated. Please verify your account.');
+        } else {
+          setError(data.message || 'Invalid credentials');
+        }
+        return;
       }
+
+      // on success, store token and redirect
+      localStorage.setItem('token', data.token);
+      navigate('/dashboard');
     } catch (err) {
       console.error('Login error:', err);
       setError('Something went wrong while trying to sign in.');
+    }
+  };
+
+  // 5. Resend verification code
+  const handleResend = async () => {
+    setError('');
+    setAllowResend(false);
+    setTimer(300); // 5 minutes
+
+    try {
+      const res = await fetch('http://localhost:3002/api/users/resend-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || 'Failed to resend verification code');
+      } else {
+        navigate('/verify-code', { state: { email } });
+      }
+    } catch {
+      setError('Something went wrong while resending code.');
     }
   };
 
@@ -51,7 +95,10 @@ export const useSigninController = () => {
     email,
     password,
     error,
+    allowResend,
+    formattedTimer,
     handleChange,
     handleSubmit,
+    handleResend,
   };
 };

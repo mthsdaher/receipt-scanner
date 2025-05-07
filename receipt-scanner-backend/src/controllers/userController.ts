@@ -1,5 +1,3 @@
-// src/controllers/userController.ts
-
 import { Request, Response } from "express";
 import User, { UserStatus } from "../models/User";
 import jwt from "jsonwebtoken";
@@ -60,7 +58,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * Controller to login an existing user (only if activated)
+ controller to login an existing user (only if activated)
  */
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
