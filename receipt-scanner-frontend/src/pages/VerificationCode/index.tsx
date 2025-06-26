@@ -1,4 +1,6 @@
 import React from "react";
+
+const CODE_LENGTH = 6;
 import Layout from "@components/Layout";
 import { useVerificationController } from "./controller";
 import {
@@ -33,12 +35,13 @@ const VerificationCode: React.FC = () => {
         <InfoText>Expires in {formattedTimer}</InfoText>
 
         <Input
-          placeholder="Enter 6‑digit code"
+          placeholder={`Enter ${CODE_LENGTH}\u2011digit code`}
+
           value={codeInput}
           onChange={(e) => setCodeInput(e.target.value)}
         />
 
-        <Button onClick={handleVerify} disabled={isVerifying || codeInput.length !== 6}>
+        <Button onClick={handleVerify} disabled={isVerifying || codeInput.length !== CODE_LENGTH}>
           {isVerifying ? "Verifying..." : "Verify Code"}
         </Button>
 

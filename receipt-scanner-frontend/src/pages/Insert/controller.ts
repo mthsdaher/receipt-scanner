@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { ParsedReceipt, extractReceiptData } from "@utils/dataExtractor";
 import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../../contexts/AuthContext";
 
 export const useInsertReceiptController = () => {
+  const { signOut } = useAuth();
+
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<ParsedReceipt | null>(null);
   const [ocrLines, setOcrLines] = useState<string[]>([]);
@@ -52,10 +55,15 @@ export const useInsertReceiptController = () => {
   const handleSave = async () => {
     if (!parsedData || !userId) return;
 
+    const token = localStorage.getItem("token");
+
     try {
       const response = await fetch("http://localhost:3002/api/receipts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           amount: parsedData.total,
           date: parsedData.date,
@@ -66,6 +74,8 @@ export const useInsertReceiptController = () => {
 
       if (response.ok) {
         setSaved(true);
+      } else if (response.status === 401) {
+        signOut();
       } else {
         throw new Error("Failed to save receipt");
       }
