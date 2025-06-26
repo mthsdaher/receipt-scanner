@@ -1,18 +1,18 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 
 // Signout component to handle user logout
 const Signout = () => {
-  // Hook for programmatic navigation
-  const navigate = useNavigate();
+  // Access signOut from auth context
+  const { signOut } = useAuth();
 
   // Effect to handle sign-out logic when the component mounts
   useEffect(() => {
     // Clear the authentication token from localStorage
-    localStorage.removeItem('token');
-    // Redirect the user to the sign-in page
-    navigate('/signin');
-  }, [navigate]); // Dependency array includes navigate to avoid warnings
+    localStorage.removeItem("token");
+    // Call signOut from auth context
+    signOut();
+  }, [signOut]);
 
   // Render a simple message (user will be redirected immediately)
   return (
