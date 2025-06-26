@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ParsedReceipt, extractReceiptData } from "@utils/dataExtractor";
 import { jwtDecode } from "jwt-decode";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "contexts/AuthContext";
 
 export const useInsertReceiptController = () => {
   const { signOut } = useAuth();
@@ -16,10 +16,15 @@ export const useInsertReceiptController = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      const decoded: any = jwtDecode(token);
-      setUserId(decoded?.id || null);
+      try {
+        const decoded: any = jwtDecode(token);
+        setUserId(decoded?.id || null);
+      } catch (err) {
+        console.error("Failed to decode token:", err);
+        signOut();
+      }
     }
-  }, []);
+  }, [signOut]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

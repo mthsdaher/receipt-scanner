@@ -1,22 +1,39 @@
-import { useState } from 'react';
-import { Receipt } from './types';
+import { useState } from "react";
+import { jwtDecode } from "jwt-decode";
+import { useAuth } from "contexts/AuthContext";
+import { Receipt } from "./types";
 
 export const useDashboardController = () => {
+  const { signOut } = useAuth();
   const [receipts, setReceipts] = useState<Receipt[]>([]);
 
   const fetchReceipts = async () => {
+    const token = localStorage.getItem("token");
+    let userId: string | null = null;
+
+    if (token) {
+      try {
+        const decoded: any = jwtDecode(token);
+        userId = decoded?.id || null;
+      } catch (err) {
+        console.error("Failed to decode token:", err);
+        signOut();
+        return;
+      }
+    }
     try {
-      const token = localStorage.getItem('token');
-      const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;
-      const response = await fetch(`http://localhost:3002/api/receipts/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `http://localhost:3002/api/receipts/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const data = await response.json();
       setReceipts(data);
     } catch (err) {
-      console.error('Failed to fetch receipts:', err);
+      console.error("Failed to fetch receipts:", err);
     }
   };
 
