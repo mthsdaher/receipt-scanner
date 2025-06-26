@@ -29,7 +29,7 @@ export const currentUser = (
 
   try {
     // Verify token using JWT_SECRET from .env
-    const payload = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as UserPayload;
+    const payload = jwt.verify(token, process.env.JWT_SECRET as string) as UserPayload;
     req.currentUser = payload; // Attach user payload to request
     next();
   } catch (error) {

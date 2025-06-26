@@ -9,6 +9,15 @@ import "dotenv/config";
 import connectDB from "./config/database";
 import ocrProxy from "./routes/ocrProxy"; // Import the OCR proxy routes
 
+
+if (!process.env.JWT_SECRET) {
+  console.error('JWT_SECRET environment variable must be defined');
+  process.exit(1);
+}
+if (!process.env.MONGO_URI) {
+  console.error('MONGO_URI environment variable must be defined');
+  process.exit(1);
+}
 const app = express();
 
 app.use(

@@ -5,7 +5,7 @@ import { Password } from "../utils/password";
 import crypto from "crypto";
 import { generateVerificationCode } from "../utils/verificationCode";
 import { sendVerificationEmail } from "../utils/email";
-const { validationResult } = require('express-validator');
+const { validationResult } = require("express-validator");
 
 /**
  * Controller to signup (create) a new user with pending activation status
@@ -77,18 +77,16 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     if (user.status !== UserStatus.Active) {
-      res
-        .status(403)
-        .json({
-          status: "error",
-          message: "Account not activated. Please verify your account.",
-        });
+      res.status(403).json({
+        status: "error",
+        message: "Account not activated. Please verify your account.",
+      });
       return;
     }
 
     const token = jwt.sign(
       { id: user._id, email: user.email },
-      process.env.JWT_SECRET || "your-secret-key",
+      process.env.JWT_SECRET as string,
       { expiresIn: "1h" }
     );
 
@@ -209,10 +207,23 @@ export const passwordReset = async (
       res.status(404).json({ status: "error", message: "User not found" });
       return;
     }
+
+    if (!user.resetToken || typeof user.resetToken !== "string") {
+      res
+        .status(400)
+        .json({ status: "error", message: "Invalid or expired reset token" });
+      return;
+    }
+
+    const providedToken = Buffer.from(resetToken);
+    const storedToken = Buffer.from(user.resetToken);
+    const tokensMatch =
+      providedToken.length === storedToken.length &&
+      crypto.timingSafeEqual(providedToken, storedToken);
+
     if (
-      !user.resetToken ||
       new Date() > (user.resetTokenExpires as Date) ||
-      !crypto.timingSafeEqual(Buffer.from(resetToken), Buffer.from(user.resetToken))
+      !tokensMatch
     ) {
       res
         .status(400)
@@ -283,7 +294,10 @@ export const resendVerificationCode = async (
  * - Activates the user if valid.
  * - Returns a JWT so the frontend can stay logged in.
  */
-export const validateCode = async (req: Request, res: Response): Promise<void> => {
+export const validateCode = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { email, code } = req.body;
 
   // 1. Find user by email
@@ -314,7 +328,7 @@ export const validateCode = async (req: Request, res: Response): Promise<void> =
   // 5. Issue JWT
   const token = jwt.sign(
     { id: user._id, email: user.email },
-    process.env.JWT_SECRET || "your-secret-key",
+    process.env.JWT_SECRET as string,
     { expiresIn: "1h" }
   );
 

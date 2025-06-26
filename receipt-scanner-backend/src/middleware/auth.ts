@@ -15,7 +15,7 @@ const auth = (req: AuthRequest, res: Response, next: NextFunction) => {
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { id: string };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
     req.user = { id: decoded.id }; // Attach user to request
     next(); // Proceed to next middleware or route handler
   } catch (error) {

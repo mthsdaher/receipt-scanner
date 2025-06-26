@@ -2,6 +2,7 @@ import 'dotenv/config';
 import mongoose from 'mongoose';
 import User from '../models/User';
 import connectDB from '../config/database';
+import { Password } from '../utils/password';
 
 // Sample user data
 const users = [
@@ -24,8 +25,16 @@ const seedDB = async () => {
     await User.deleteMany({});
     console.log('Existing users cleared');
 
+     // Hash passwords before inserting
+    const hashedUsers = await Promise.all(
+      users.map(async (user) => ({
+        ...user, // Spread user data
+        password: await Password.toHash(user.password), // Hash the password
+      }))
+    );
+
     // Insert sample users
-    await User.insertMany(users);
+    await User.insertMany(hashedUsers);
     console.log('Database seeded with sample users');
 
     // Close the connection
