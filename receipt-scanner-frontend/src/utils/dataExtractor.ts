@@ -1,74 +1,52 @@
 export interface ParsedReceipt {
-  company: string | null;
-  address: string | null;
-  items: string[];
-  subtotal: number | null;
-  tax: number | null;
-  total: number | null;
-  date: string | null;
-  time: string | null;
+  store: string;
+  total: number;
+  date: string;
 }
 
 export function extractReceiptData(lines: string[]): ParsedReceipt {
-  const data: ParsedReceipt = {
-    company: lines[0]?.trim() || null,
-    address: lines[1]?.trim() || null,
-    items: [],
-    subtotal: null,
-    tax: null,
-    total: null,
-    date: null,
-    time: null,
-  };
+  let store = 'Unknown';
+  let total = 0;
+  let date = '';
 
-  let insideItems = true;
+  // Normaliza e limpa as linhas
+  const cleanedLines = lines.map(line => line.trim());
 
-  for (let i = 2; i < lines.length; i++) {
-    const line = lines[i].trim();
-
-    // Check if we reached subtotal section
-    if (line.toLowerCase().includes('subtotal')) {
-      insideItems = false;
-      data.subtotal = extractMoney(lines[i + 1] || '');
+  // 1. Encontrar o nome da loja (primeiras 5 linhas em CAPSLOCK, sem números)
+  for (let i = 0; i < Math.min(cleanedLines.length, 5); i++) {
+    const line = cleanedLines[i];
+    if (/^[A-Z\s&\-\.]{4,}$/.test(line) && !/\d/.test(line)) {
+      store = line.trim();
+      break;
     }
+  }
 
-    if (line.toLowerCase().includes('hst') || line.toLowerCase().includes('tax')) {
-      data.tax = extractMoney(lines[i + 1] || '');
-    }
-
-    if (line.toLowerCase().includes('total')) {
-      data.total = extractMoney(lines[i + 1] || '');
-    }
-
-    if (line.toLowerCase().includes('date/time')) {
-      const dateLine = lines[i + 1] || '';
-      const match = dateLine.match(/(\d{2}\/\d{2}\/\d{2})\s+(\d{2}:\d{2}:\d{2})/);
+  // 2. Procurar o valor total (últimos valores numéricos com palavras-chave)
+  for (const line of cleanedLines) {
+    if (/total|amount due|balance/i.test(line)) {
+      const match = line.match(/(\d+[.,]\d{2})/);
       if (match) {
-        data.date = match[1];
-        data.time = match[2];
+        total = parseFloat(match[1].replace(',', '.'));
       }
     }
+  }
 
-    if (insideItems && isLikelyProduct(line)) {
-      data.items.push(line);
+  // 3. Procurar data em vários formatos comuns
+  const dateRegexes = [
+    /\b\d{4}[/-]\d{2}[/-]\d{2}\b/, // YYYY-MM-DD
+    /\b\d{2}[/-]\d{2}[/-]\d{4}\b/, // DD/MM/YYYY or MM/DD/YYYY
+  ];
+
+  for (const line of cleanedLines) {
+    for (const regex of dateRegexes) {
+      const match = line.match(regex);
+      if (match) {
+        date = match[0];
+        break;
+      }
     }
+    if (date) break;
   }
 
-  return data;
-}
-
-function extractMoney(text: string): number | null {
-  const match = text.match(/(\d{1,3}[.,]?\d{2})/);
-  if (match) {
-    return parseFloat(match[1].replace(',', '.'));
-  }
-  return null;
-}
-
-function isLikelyProduct(line: string): boolean {
-  return (
-    /^[A-Z0-9\s\-]+$/.test(line) &&
-    line.length > 3 &&
-    !/\d{11,}/.test(line)
-  );
+  return { store, total, date };
 }

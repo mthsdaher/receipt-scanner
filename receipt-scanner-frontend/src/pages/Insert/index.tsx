@@ -39,22 +39,9 @@ const InsertReceipt: React.FC = () => {
           <div className={styles.section}>
             <h2 className={styles.subtitle}>Extracted Data</h2>
             <div className={styles.dataItem}>
-              <p><strong>Company:</strong> {parsedData.company}</p>
-              <p><strong>Address:</strong> {parsedData.address}</p>
-              <p><strong>Subtotal:</strong> ${parsedData.subtotal}</p>
-              <p><strong>Tax:</strong> ${parsedData.tax}</p>
-              <p><strong>Total:</strong> ${parsedData.total}</p>
+              <p><strong>Store:</strong> {parsedData.store}</p>
+              <p><strong>Total:</strong> ${parsedData.total.toFixed(2)}</p>
               <p><strong>Date:</strong> {parsedData.date}</p>
-              <p><strong>Time:</strong> {parsedData.time}</p>
-            </div>
-
-            <div className="mt-4">
-              <h3 className="font-semibold">Items:</h3>
-              <ul className={styles.list}>
-                {parsedData.items?.map((item, idx) => (
-                  <li key={idx}>{item}</li>
-                ))}
-              </ul>
             </div>
 
             <button

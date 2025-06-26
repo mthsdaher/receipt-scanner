@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from "express";
 import userRoutes from "./routes/userRoutes";
-import receiptRoutes from "./routes/userRoutes";
+import receiptRoutes from "./routes/receiptRoutes";
 import swaggerUi from "swagger-ui-express";
 import path from "path";
 import cors from "cors";

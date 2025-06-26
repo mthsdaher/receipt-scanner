@@ -59,7 +59,7 @@ export const useInsertReceiptController = () => {
         body: JSON.stringify({
           amount: parsedData.total,
           date: parsedData.date,
-          description: parsedData.items.join(", "),
+          description: parsedData.store,
           category: "grocery",
         }),
       });
