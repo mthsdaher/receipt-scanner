@@ -75,7 +75,7 @@
                         },
                         "verificationCode": {
                           "type": "string",
-                          "example": "1234"
+                          "example": "123456"
                         }
                       }
                     }
