@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SignupFormFields, SignupControllerReturn } from "./types";
+import { buildApiUrl } from "services/api";
 
 /**
  * Manages only the signup form and redirects to /verify-code on success.
@@ -31,7 +32,7 @@ export const useSignupController = (): SignupControllerReturn => {
   const handleSubmit = async () => {
     setError("");
     try {
-      const res = await fetch("http://localhost:3002/api/users/signup", {
+      const res = await fetch(buildApiUrl("/api/users/signup"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

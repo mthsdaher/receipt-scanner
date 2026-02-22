@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UseSigninControllerReturn } from './types';
 import { useAuth } from 'contexts/AuthContext';
+import { buildApiUrl } from 'services/api';
 
 export const useSigninController = (): UseSigninControllerReturn => {
   const [email, setEmail] = useState('');
@@ -43,7 +44,7 @@ export const useSigninController = (): UseSigninControllerReturn => {
   const handleSubmit = async () => {
     setError('');
     try {
-      const res = await fetch('http://localhost:3002/api/users/login', {
+      const res = await fetch(buildApiUrl('/api/users/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -77,7 +78,7 @@ export const useSigninController = (): UseSigninControllerReturn => {
     setTimer(300); // 5 minutes
 
     try {
-      const res = await fetch('http://localhost:3002/api/users/resend-code', {
+      const res = await fetch(buildApiUrl('/api/users/resend-code'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

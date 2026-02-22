@@ -3,6 +3,7 @@ import axios from 'axios';
 import FormData from 'form-data';
 import multer from 'multer';
 import fs from 'fs';
+import { env } from '../config/env';
 
 const router = express.Router();
 const upload = multer({ dest: 'uploads/' });
@@ -19,7 +20,7 @@ router.post('/ocr', upload.single('file'), async (req, res) => {
     const formData = new FormData();
     formData.append('file', fs.createReadStream(filePath));
 
-    const response = await axios.post('http://localhost:8000/ocr', formData, {
+    const response = await axios.post(`${env.OCR_SERVICE_URL}/ocr`, formData, {
       headers: formData.getHeaders(),
     });
 

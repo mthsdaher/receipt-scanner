@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { UseVerificationControllerReturn } from './types';
+import { buildApiUrl } from 'services/api';
 
 export const useVerificationController = (): UseVerificationControllerReturn => {
   const location = useLocation();
@@ -40,7 +41,7 @@ export const useVerificationController = (): UseVerificationControllerReturn => 
   const handleResend = async () => {
     setVerifyError('');
     try {
-      const res = await fetch('http://localhost:3002/api/users/resend-code', {
+      const res = await fetch(buildApiUrl('/api/users/resend-code'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -58,7 +59,7 @@ export const useVerificationController = (): UseVerificationControllerReturn => 
     setVerifyError('');
     setIsVerifying(true);
     try {
-      const res = await fetch('http://localhost:3002/api/users/validate-code', {
+      const res = await fetch(buildApiUrl('/api/users/validate-code'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code: codeInput }),

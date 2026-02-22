@@ -2,6 +2,7 @@ import { useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "contexts/AuthContext";
 import { Receipt } from "./types";
+import { buildApiUrl } from "services/api";
 
 export const useDashboardController = () => {
   const { signOut } = useAuth();
@@ -23,7 +24,7 @@ export const useDashboardController = () => {
     }
     try {
       const response = await fetch(
-        `http://localhost:3002/api/receipts/${userId}`,
+        buildApiUrl(`/api/receipts/${userId}`),
         {
           headers: {
             Authorization: `Bearer ${token}`,

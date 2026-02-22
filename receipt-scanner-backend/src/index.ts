@@ -1,28 +1,18 @@
-import 'dotenv/config';
 import express from "express";
 import userRoutes from "./routes/userRoutes";
 import receiptRoutes from "./routes/receiptRoutes";
 import swaggerUi from "swagger-ui-express";
 import path from "path";
 import cors from "cors";
-import "dotenv/config";
 import connectDB from "./config/database";
 import ocrProxy from "./routes/ocrProxy"; // Import the OCR proxy routes
+import { env } from "./config/env";
 
-
-if (!process.env.JWT_SECRET) {
-  console.error('JWT_SECRET environment variable must be defined');
-  process.exit(1);
-}
-if (!process.env.MONGO_URI) {
-  console.error('MONGO_URI environment variable must be defined');
-  process.exit(1);
-}
 const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:3000", // allow requests from the frontend
+    origin: env.FRONTEND_URL,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // allow these HTTP methods
     credentials: true, // allow cookies or credentials if needed
   })
@@ -44,13 +34,11 @@ app.use("/api/receipts", receiptRoutes);
 app.use("/api/paddle", ocrProxy);
 
 // Start the server
-const PORT = process.env.PORT || 3002;
-
 connectDB()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
-      console.log(`Swagger UI available at http://localhost:${PORT}/api-docs`);
+    app.listen(env.PORT, () => {
+      console.log(`Server running on port ${env.PORT}`);
+      console.log(`Swagger UI available at /api-docs`);
     });
   })
   .catch((err) => {

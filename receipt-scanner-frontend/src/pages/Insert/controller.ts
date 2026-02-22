@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ParsedReceipt, extractReceiptData } from "@utils/dataExtractor";
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "contexts/AuthContext";
+import { buildApiUrl } from "services/api";
 
 export const useInsertReceiptController = () => {
   const { signOut } = useAuth();
@@ -42,7 +43,7 @@ export const useInsertReceiptController = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3002/api/paddle/ocr", {
+      const response = await fetch(buildApiUrl("/api/paddle/ocr"), {
         method: "POST",
         body: formData,
       });
@@ -63,7 +64,7 @@ export const useInsertReceiptController = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await fetch("http://localhost:3002/api/receipts", {
+      const response = await fetch(buildApiUrl("/api/receipts"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
