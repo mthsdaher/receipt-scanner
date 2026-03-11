@@ -15,7 +15,9 @@ export const Title = styled.h2`
 `;
 
 export const Input = styled.input`
+  display: block;
   width: 100%;
+  box-sizing: border-box;
   padding: 0.75rem;
   margin-bottom: 1rem;
   border: 1px solid #ccc;
@@ -23,12 +25,14 @@ export const Input = styled.input`
 `;
 
 export const Button = styled.button`
+  display: block;
   width: 100%;
+  box-sizing: border-box;
   padding: 0.75rem;
   background-color: #0b666a;
   color: white;
   font-weight: bold;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 5px;
   cursor: pointer;
 `;

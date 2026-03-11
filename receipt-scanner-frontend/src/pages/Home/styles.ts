@@ -10,6 +10,14 @@ export const Container = styled.div`
   padding: 2rem;
 `;
 
+export const HomeLogo = styled.img`
+  width: min(360px, 80vw);
+  height: auto;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  object-fit: cover;
+`;
+
 export const Title = styled.h1`
   font-size: 2.5rem;
   font-weight: bold;

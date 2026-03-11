@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import Signin from './pages/Signin';
 import Signup from './pages/Signup';
@@ -12,6 +12,18 @@ import VerificationCode from "./pages/VerificationCode";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import History from "./pages/History";
+import { useAuth } from './contexts/AuthContext';
+
+const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+  const { isLoggedIn } = useAuth();
+  const location = useLocation();
+
+  if (!isLoggedIn) {
+    return <Navigate to="/signin" replace state={{ from: location.pathname }} />;
+  }
+
+  return children;
+};
 
 const App: React.FC = () => (
   <>
@@ -31,9 +43,30 @@ const App: React.FC = () => (
         <Route path="/verify-code" element={<VerificationCode />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/historic" element={<History />} />
-        <Route path="/insert-receipt" element={<InsertReceipt />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/historic"
+          element={
+            <ProtectedRoute>
+              <History />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/insert-receipt"
+          element={
+            <ProtectedRoute>
+              <InsertReceipt />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/signout" element={<Signout />} />
       </Routes>
     </div>

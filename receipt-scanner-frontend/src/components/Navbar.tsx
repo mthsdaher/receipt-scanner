@@ -12,8 +12,11 @@ import {
   LogOut,
 } from 'lucide-react';
 
-const navItems = [
+const baseNavItems = [
   { path: '/', label: 'Home', icon: Home },
+];
+
+const privateNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/historic', label: 'History', icon: History },
   { path: '/insert-receipt', label: 'Insert', icon: PlusCircle },
@@ -23,6 +26,7 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const { isLoggedIn, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navItems = isLoggedIn ? [...baseNavItems, ...privateNavItems] : [];
 
   const authItems = isLoggedIn
     ? [{ action: signOut, label: 'Sign Out', icon: LogOut }]
@@ -59,15 +63,24 @@ const Navbar: React.FC = () => {
         <Link
           to="/"
           style={{
-            fontWeight: 700,
-            fontSize: '1.25rem',
-            color: '#111',
+            display: 'flex',
+            alignItems: 'center',
             textDecoration: 'none',
             flexShrink: 0,
           }}
           className="hover:opacity-70"
+          aria-label="Receipt Scanner"
         >
-          Receipt Scanner
+          <img
+            src="/logo.jpg"
+            alt="Receipt Scanner"
+            style={{
+              height: '72px',
+              width: 'auto',
+              borderRadius: '6px',
+              objectFit: 'cover',
+            }}
+          />
         </Link>
 
         {/* Desktop navigation */}
