@@ -141,6 +141,7 @@ const Navbar: React.FC = () => {
             ) : (
               <button
                 type="button"
+                key={item.label}
                 onClick={item.action}
                 style={{
                   display: 'flex',
