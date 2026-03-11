@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiClient } from "services/apiClient";
+import { ApiClientError, apiClient } from "services/apiClient";
 import { UseForgotPasswordControllerReturn } from "./types";
 
 interface ApiSuccessResponse<T> {
@@ -35,7 +35,11 @@ export const useForgotPasswordController = (): UseForgotPasswordControllerReturn
         setResetToken(response.data.resetToken);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to request password reset.");
+      if (err instanceof ApiClientError && err.status === 429) {
+        setError("Too many reset requests. Please wait and try again.");
+      } else {
+        setError(err instanceof Error ? err.message : "Failed to request password reset.");
+      }
     }
   };
 

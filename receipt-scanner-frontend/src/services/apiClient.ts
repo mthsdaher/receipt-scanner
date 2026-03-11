@@ -9,8 +9,30 @@ export interface ApiClientOptions {
 
 export interface ApiError {
   status: number;
+  code?: string;
   message: string;
+  requestId?: string;
+  details?: unknown;
   errors?: { msg: string; path: string }[];
+}
+
+export class ApiClientError extends Error {
+  public readonly status: number;
+  public readonly code?: string;
+  public readonly requestId?: string;
+  public readonly details?: unknown;
+
+  constructor(apiError: ApiError) {
+    const messageWithRequestId = apiError.requestId
+      ? `${apiError.message} (request: ${apiError.requestId})`
+      : apiError.message;
+    super(messageWithRequestId);
+    this.name = "ApiClientError";
+    this.status = apiError.status;
+    this.code = apiError.code;
+    this.requestId = apiError.requestId;
+    this.details = apiError.details;
+  }
 }
 
 /**
@@ -64,8 +86,16 @@ async function request<T>(
     if (res.status === 401 && onUnauthorized) {
       onUnauthorized();
     }
-    const err = data as ApiError;
-    throw new Error(err.message ?? `Request failed (${res.status})`);
+    const parsedError = (data as Partial<ApiError>) ?? {};
+    const err: ApiError = {
+      status: res.status,
+      code: parsedError.code,
+      message: parsedError.message ?? `Request failed (${res.status})`,
+      requestId: parsedError.requestId,
+      details: parsedError.details,
+      errors: parsedError.errors,
+    };
+    throw new ApiClientError(err);
   }
 
   return data as T;

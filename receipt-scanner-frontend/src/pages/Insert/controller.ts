@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ParsedReceipt } from "../../utils/dataExtractor";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAuthUserId } from "../../hooks/useAuthUserId";
-import { apiClient } from "../../services/apiClient";
+import { ApiClientError, apiClient } from "../../services/apiClient";
 
 interface ApiSuccessResponse<T> {
   status: "success";
@@ -75,7 +75,11 @@ export const useInsertReceiptController = () => {
       });
     } catch (err) {
       console.error("OCR upload failed:", err);
-      setError("Failed to process OCR. You can still fill the receipt manually.");
+      if (err instanceof ApiClientError && err.status === 429) {
+        setError("OCR is temporarily rate-limited. Please wait a moment and try again.");
+      } else {
+        setError("Failed to process OCR. You can still fill the receipt manually.");
+      }
     } finally {
       setLoading(false);
     }
@@ -111,7 +115,11 @@ export const useInsertReceiptController = () => {
       setSaved(true);
     } catch (err) {
       console.error("Failed to save receipt:", err);
-      setError("Failed to save receipt. Please review the data and try again.");
+      if (err instanceof ApiClientError && err.status === 429) {
+        setError("Too many save attempts. Please wait and try again.");
+      } else {
+        setError("Failed to save receipt. Please review the data and try again.");
+      }
     } finally {
       setSaving(false);
     }

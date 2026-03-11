@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UseSigninControllerReturn } from './types';
 import { useAuth } from 'contexts/AuthContext';
-import { apiClient } from 'services/apiClient';
+import { ApiClientError, apiClient } from 'services/apiClient';
 
 interface ApiSuccessResponse<T> {
   status: 'success';
@@ -52,7 +52,11 @@ export const useSigninController = (): UseSigninControllerReturn => {
       signIn(response.data.token);
       navigate('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong while trying to sign in.');
+      if (err instanceof ApiClientError && err.status === 429) {
+        setError('Too many sign-in attempts. Please wait and try again.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Something went wrong while trying to sign in.');
+      }
     }
   };
 
@@ -65,7 +69,11 @@ export const useSigninController = (): UseSigninControllerReturn => {
       await apiClient.post('/api/users/resend-code', { email });
       navigate('/verify-code', { state: { email } });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong while resending code.');
+      if (err instanceof ApiClientError && err.status === 429) {
+        setError('Too many resend attempts. Please wait and try again.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Something went wrong while resending code.');
+      }
     }
   };
 

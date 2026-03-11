@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { apiClient } from "services/apiClient";
+import { ApiClientError, apiClient } from "services/apiClient";
 import { UseResetPasswordControllerReturn } from "./types";
 
 type ResetPageState = {
@@ -41,7 +41,11 @@ export const useResetPasswordController = (): UseResetPasswordControllerReturn =
       setSuccessMessage("Password reset successfully. Redirecting to Sign In...");
       setTimeout(() => navigate("/signin"), 1200);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reset password.");
+      if (err instanceof ApiClientError && err.status === 429) {
+        setError("Too many reset attempts. Please wait and try again.");
+      } else {
+        setError(err instanceof Error ? err.message : "Failed to reset password.");
+      }
     }
   };
 

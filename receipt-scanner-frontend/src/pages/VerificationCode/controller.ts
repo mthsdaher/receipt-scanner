@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { UseVerificationControllerReturn } from './types';
-import { apiClient } from 'services/apiClient';
+import { ApiClientError, apiClient } from 'services/apiClient';
 
 interface ApiSuccessResponse<T> {
   status: 'success';
@@ -53,7 +53,11 @@ export const useVerificationController = (): UseVerificationControllerReturn => 
       setTimer(300);
       if (response.data.verificationCode) setCodeInput(response.data.verificationCode);
     } catch (err) {
-      setVerifyError(err instanceof Error ? err.message : 'Something went wrong');
+      if (err instanceof ApiClientError && err.status === 429) {
+        setVerifyError('Too many resend attempts. Please wait and try again.');
+      } else {
+        setVerifyError(err instanceof Error ? err.message : 'Something went wrong');
+      }
     }
   };
 
@@ -68,7 +72,11 @@ export const useVerificationController = (): UseVerificationControllerReturn => 
       signIn(response.data.token);
       navigate('/', { replace: true });
     } catch (err) {
-      setVerifyError(err instanceof Error ? err.message : 'Invalid code');
+      if (err instanceof ApiClientError && err.status === 429) {
+        setVerifyError('Too many verification attempts. Please wait and try again.');
+      } else {
+        setVerifyError(err instanceof Error ? err.message : 'Invalid code');
+      }
     } finally {
       setIsVerifying(false);
     }
