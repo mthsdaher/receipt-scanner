@@ -1,7 +1,5 @@
 import React from "react";
-
-const CODE_LENGTH = 6;
-import Layout from "@components/Layout";
+import Layout from "../../components/Layout";
 import { useVerificationController } from "./controller";
 import {
   Container,
@@ -12,6 +10,8 @@ import {
   InfoText,
   ResendButton,
 } from "./styles";
+
+const CODE_LENGTH = 6;
 
 const VerificationCode: React.FC = () => {
   const {
@@ -30,7 +30,7 @@ const VerificationCode: React.FC = () => {
       <Container>
         <Title>Verify Your Email</Title>
 
-        <InfoText>Please enter the code sent to:</InfoText>
+        <InfoText>Enter the verification code for:</InfoText>
         <InfoText><strong>{email}</strong></InfoText>
         <InfoText>Expires in {formattedTimer}</InfoText>
 
@@ -41,11 +41,11 @@ const VerificationCode: React.FC = () => {
           onChange={(e) => setCodeInput(e.target.value)}
         />
 
-        <Button onClick={handleVerify} disabled={isVerifying || codeInput.length !== CODE_LENGTH}>
+        <Button type="button" onClick={handleVerify} disabled={isVerifying || codeInput.length !== CODE_LENGTH}>
           {isVerifying ? "Verifying..." : "Verify Code"}
         </Button>
 
-        <ResendButton onClick={handleResend} disabled={formattedTimer !== "00:00"}>
+        <ResendButton type="button" onClick={handleResend} disabled={formattedTimer !== "00:00"}>
           Resend Code
         </ResendButton>
 

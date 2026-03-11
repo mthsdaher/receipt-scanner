@@ -1,34 +1,39 @@
-import express from 'express';
-import axios from 'axios';
-import FormData from 'form-data';
-import multer from 'multer';
-import fs from 'fs';
-import { env } from '../config/env';
+import express from "express";
+import axios from "axios";
+import FormData from "form-data";
+import multer from "multer";
+import fs from "fs";
+import { env } from "../config/env";
 
 const router = express.Router();
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: "uploads/" });
 
-router.post('/ocr', upload.single('file'), async (req, res) => {
+/** Async file cleanup - avoids blocking event loop */
+const cleanupFile = (filePath: string): void => {
+  fs.promises.unlink(filePath).catch((err) => console.error("[OCR] Cleanup failed:", err));
+};
+
+router.post("/ocr", upload.single("file"), async (req, res) => {
+  const filePath = req.file?.path;
+
+  if (!filePath) {
+    res.status(400).json({ status: "error", message: "File missing" });
+    return;
+  }
+
   try {
-    const filePath = req.file?.path;
-
-    if (!filePath) {
-      res.status(400).json({ error: 'File missing' });
-      return;
-    }
-
     const formData = new FormData();
-    formData.append('file', fs.createReadStream(filePath));
+    formData.append("file", fs.createReadStream(filePath));
 
     const response = await axios.post(`${env.OCR_SERVICE_URL}/ocr`, formData, {
       headers: formData.getHeaders(),
     });
 
-    fs.unlinkSync(filePath); // clean temp file
-
-    res.json(response.data); // ✅ apenas envie, sem "return"
+    cleanupFile(filePath);
+    res.json(response.data);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to OCR image' });
+    cleanupFile(filePath);
+    res.status(500).json({ status: "error", message: "Failed to OCR image" });
   }
 });
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import Layout from '@components/Layout';
+import Layout from '../../components/Layout';
 import { useInsertReceiptController } from './controller';
 import { styles } from './styles';
 
@@ -28,6 +28,7 @@ const InsertReceipt: React.FC = () => {
         />
 
         <button
+          type="button"
           onClick={handleUpload}
           className={styles.button}
           disabled={!file || loading}
@@ -45,6 +46,7 @@ const InsertReceipt: React.FC = () => {
             </div>
 
             <button
+              type="button"
               onClick={handleSave}
               className={styles.saveButton}
               disabled={!userId}

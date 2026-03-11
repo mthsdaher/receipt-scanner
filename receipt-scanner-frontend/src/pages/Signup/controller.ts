@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SignupFormFields, SignupControllerReturn } from "./types";
-import { buildApiUrl } from "services/api";
+import { apiClient } from "services/apiClient";
 
 /**
  * Manages only the signup form and redirects to /verify-code on success.
@@ -32,20 +32,16 @@ export const useSignupController = (): SignupControllerReturn => {
   const handleSubmit = async () => {
     setError("");
     try {
-      const res = await fetch(buildApiUrl("/api/users/signup"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      const data = await apiClient.post<{
+        verificationCode?: string;
+        message?: string;
+      }>("/api/users/signup", form);
+      // Pass email and code via state to verify page (code only in dev when no email sending)
+      navigate("/verify-code", {
+        state: { email: form.email, verificationCode: data.verificationCode },
       });
-      const data = await res.json();
-      if (res.ok) {
-        // Pass email via state to the verify page
-        navigate("/verify-code", { state: { email: form.email } });
-      } else {
-        setError(data.message || "Signup failed");
-      }
-    } catch {
-      setError("Something went wrong");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     }
   };
 

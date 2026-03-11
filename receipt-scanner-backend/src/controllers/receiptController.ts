@@ -1,95 +1,65 @@
 import { Request, Response } from "express";
-import Receipt from "../models/Receipt";
-import User from "../models/User";
-import { calculateReceiptTotal } from "../utils/functions";
+import { UnauthorizedError } from "../errors/AppError";
+// express-validator uses CommonJS; import via require for compatibility
 const { validationResult } = require("express-validator");
+import { ReceiptService } from "../services/ReceiptService";
+import { asyncHandler } from "../middleware/asyncHandler";
 
-// Controller to create a new receipt
-export const createReceipt = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+/**
+ * Controllers: HTTP boundary only.
+ * - Extract/validate input from req
+ * - Delegate to service
+ * - Format response
+ * Errors propagate to errorHandler middleware.
+ */
+
+const createReceipt = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    res.status(400).json({ errors: errors.array() });
+    res.status(400).json({ status: "error", message: "Validation failed", errors: errors.array() });
     return;
   }
 
-  try {
-    const currentUser = req.currentUser;
-    if (!currentUser?.id) {
-      res
-        .status(401)
-        .json({ message: "Unauthorized. Token missing or invalid" });
-      return;
-    }
-
-    const { amount, date, description, category } = req.body;
-
-    const user = await User.findById(currentUser.id);
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
-
-    const receipt = new Receipt({
-      userId: currentUser.id, // IMPORTANTE!
-      amount,
-      date,
-      description,
-      category,
-    });
-
-    await receipt.save();
-    res.status(201).json(receipt);
-  } catch (error) {
-    console.error("Error creating receipt:", error);
-    res.status(500).json({ message: "Server error" });
+  const currentUser = req.currentUser;
+  if (!currentUser?.id) {
+    throw new UnauthorizedError("Token missing or invalid");
   }
-};
 
-// Controller to list all receipts for a user (secured)
-export const getUserReceipts = async (req: Request, res: Response) => {
-  try {
-    const currentUser = req.currentUser;
-    const requestedUserId = req.params.userId;
+  const { amount, date, description, category } = req.body;
 
-    if (!currentUser || currentUser.id !== requestedUserId) {
-      res
-        .status(403)
-        .json({
-          message: "Forbidden: You cannot view receipts of other users.",
-        });
-      return;
-    }
+  const receipt = await ReceiptService.create({
+    userId: currentUser.id,
+    amount,
+    date: date ? new Date(date) : new Date(),
+    description,
+    category,
+  });
 
-    const receipts = await Receipt.find({ userId: requestedUserId }).sort({
-      date: -1,
-    });
-    res.json(receipts);
-  } catch (error) {
-    console.error("Error fetching receipts:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+  res.status(201).json(receipt);
+});
 
-// Controller to scan and process a receipt image
-export const scanReceipt = async (req: Request, res: Response) => {
-  try {
-    // Simulate OCR processing (replace with actual Tesseract.js logic later)
-    const simulatedData = {
-      seller: "Example Store",
-      date: "2023-10-25",
-      items: ["Item 1", "Item 2"],
-      value: 100, // Product value
-      taxes: 10, // Tax rate in percentage or fixed amount (adjust as needed)
-      totalValue: calculateReceiptTotal(100, 10), // Calculate total using utility function (10% tax rate)
-    };
-    // Return the simulated receipt data with calculated total
-    res.status(200).json(simulatedData);
-  } catch (error) {
-    // Log any errors and return a server error response
-    console.error("Error processing receipt scan:", error);
-    res.status(500).json({ message: "Server error during receipt scan" });
-  }
-};
+const getUserReceipts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const currentUser = req.currentUser;
+  const requestedUserId = req.params.userId;
+
+  ReceiptService.assertCanAccess(requestedUserId, currentUser?.id);
+
+  const receipts = await ReceiptService.findByUserId(requestedUserId);
+  res.json(receipts);
+});
+
+/** Placeholder: real OCR integration would go here */
+const scanReceipt = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+  const { calculateReceiptTotal } = await import("../utils/functions");
+  const simulatedData = {
+    seller: "Example Store",
+    date: "2023-10-25",
+    items: ["Item 1", "Item 2"],
+    value: 100,
+    taxes: 10,
+    totalValue: calculateReceiptTotal(100, 10),
+  };
+  res.status(200).json(simulatedData);
+});
+
+export { createReceipt, getUserReceipts, scanReceipt };

@@ -11,11 +11,11 @@
     "axios": "^1.8.1",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.487.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-router-dom": "^7.2.0",
-    "react-scripts": "5.0.1",
-    "react-toastify": "^11.0.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.3",
+    "react-scripts": "^4.0.3",
+    "react-toastify": "^8.2.0",
     "react-webcam": "^7.2.0",
     "styled-components": "^6.1.17",
     "tailwindcss": "3.3.2",
@@ -24,8 +24,8 @@
     "zod": "^3.24.2"
   },
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
+    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-app-rewired start",
+    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-app-rewired build",
     "test": "react-app-rewired test"
   },
   "eslintConfig": {
@@ -53,6 +53,7 @@
     "@types/react-dom": "^19.0.4",
     "@types/react-toastify": "^4.0.2",
     "autoprefixer": "^10.4.21",
+    "cross-env": "^10.1.0",
     "customize-cra": "^1.0.0",
     "postcss": "^8.5.3",
     "react-app-rewired": "^2.2.1",

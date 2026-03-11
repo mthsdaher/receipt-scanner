@@ -15,7 +15,7 @@ export function extractReceiptData(lines: string[]): ParsedReceipt {
   // 1. Encontrar o nome da loja (primeiras 5 linhas em CAPSLOCK, sem números)
   for (let i = 0; i < Math.min(cleanedLines.length, 5); i++) {
     const line = cleanedLines[i];
-    if (/^[A-Z\s&\-\.]{4,}$/.test(line) && !/\d/.test(line)) {
+    if (/^[A-Z\s&\-.]{4,}$/.test(line) && !/\d/.test(line)) {
       store = line.trim();
       break;
     }

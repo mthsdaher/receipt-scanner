@@ -1,14 +1,22 @@
-import mongoose from 'mongoose';
-import { env } from './env';
+import { Pool } from "pg";
+import { env } from "./env";
 
-const connectDB = async () => {
+const pool = new Pool({
+  connectionString: env.DATABASE_URL,
+});
+
+export const query = pool.query.bind(pool);
+
+export const connectDB = async () => {
   try {
-    await mongoose.connect(env.MONGODB_URI);
-    console.log('MongoDB Connected!');
+    const client = await pool.connect();
+    await client.query("SELECT 1");
+    client.release();
+    console.log("PostgreSQL Connected!");
   } catch (error) {
-    console.error('Error to connect to MongoDB:', error);
-    process.exit(1);
+    console.error("Error connecting to PostgreSQL:", error);
+    throw error;
   }
 };
 
-export default connectDB;
+export default pool;

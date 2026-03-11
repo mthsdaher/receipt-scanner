@@ -7,7 +7,7 @@ const envFileName =
 
 loadDotenv({ path: path.resolve(process.cwd(), envFileName) });
 
-const requiredEnvVars = ["JWT_SECRET", "MONGODB_URI"] as const;
+const requiredEnvVars = ["JWT_SECRET", "DATABASE_URL"] as const;
 
 for (const variableName of requiredEnvVars) {
   if (!process.env[variableName]) {
@@ -19,7 +19,7 @@ export const env = {
   NODE_ENV: nodeEnv,
   PORT: Number(process.env.PORT ?? 3002),
   JWT_SECRET: process.env.JWT_SECRET as string,
-  MONGODB_URI: process.env.MONGODB_URI as string,
+  DATABASE_URL: process.env.DATABASE_URL as string,
   OCR_SERVICE_URL: process.env.OCR_SERVICE_URL ?? "http://localhost:8000",
   FRONTEND_URL: process.env.FRONTEND_URL ?? "http://localhost:3000",
 } as const;

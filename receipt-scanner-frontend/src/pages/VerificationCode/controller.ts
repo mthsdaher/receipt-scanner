@@ -2,22 +2,23 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { UseVerificationControllerReturn } from './types';
-import { buildApiUrl } from 'services/api';
+import { apiClient } from 'services/apiClient';
 
 export const useVerificationController = (): UseVerificationControllerReturn => {
   const location = useLocation();
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
-  // retrieve email passed via state
+  // retrieve email and optionally verificationCode (returned by API when no email sending)
   const email = (location.state as any)?.email as string;
+  const initialCode = (location.state as any)?.verificationCode as string | undefined;
 
   // if no email, go back to signup
   useEffect(() => {
     if (!email) navigate('/signup', { replace: true });
   }, [email, navigate]);
 
-  const [codeInput, setCodeInput] = useState('');
+  const [codeInput, setCodeInput] = useState(initialCode ?? '');
   const [verifyError, setVerifyError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -37,42 +38,29 @@ export const useVerificationController = (): UseVerificationControllerReturn => 
     return `${m}:${s}`;
   }, [timer]);
 
-  // resend code
   const handleResend = async () => {
     setVerifyError('');
     try {
-      const res = await fetch(buildApiUrl('/api/users/resend-code'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (res.ok) setTimer(300);
-      else setVerifyError(data.message || 'Could not resend code');
-    } catch {
-      setVerifyError('Something went wrong');
+      const data = await apiClient.post<{ verificationCode?: string }>('/api/users/resend-code', { email });
+      setTimer(300);
+      if (data.verificationCode) setCodeInput(data.verificationCode);
+    } catch (err) {
+      setVerifyError(err instanceof Error ? err.message : 'Something went wrong');
     }
   };
 
-  // verify code
   const handleVerify = async () => {
     setVerifyError('');
     setIsVerifying(true);
     try {
-      const res = await fetch(buildApiUrl('/api/users/validate-code'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code: codeInput }),
+      const data = await apiClient.post<{ token: string }>('/api/users/validate-code', {
+        email,
+        code: codeInput,
       });
-      const data = await res.json();
-      if (res.ok) {
-        signIn(data.token);
-        navigate('/', { replace: true });
-      } else {
-        setVerifyError(data.message || 'Invalid code');
-      }
-    } catch {
-      setVerifyError('Something went wrong');
+      signIn(data.token);
+      navigate('/', { replace: true });
+    } catch (err) {
+      setVerifyError(err instanceof Error ? err.message : 'Invalid code');
     } finally {
       setIsVerifying(false);
     }

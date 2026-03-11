@@ -1,4 +1,4 @@
-import Layout from '@components/Layout';
+import Layout from '../../components/Layout';
 import { Container, Title, Subtitle, Button } from './styles';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,7 +10,7 @@ const Home = () => {
       <Container>
         <Title>Welcome to Receipt Scanner</Title>
         <Subtitle>Scan and organize your receipts easily and securely.</Subtitle>
-        <Button onClick={() => navigate('/insert-receipt')}>
+        <Button type="button" onClick={() => navigate('/insert-receipt')}>
           Start Scanning
         </Button>
       </Container>

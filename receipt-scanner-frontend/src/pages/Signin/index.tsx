@@ -1,5 +1,5 @@
 import React from 'react';
-import Layout from '@components/Layout';
+import Layout from '../../components/Layout';
 import {
   Container,
   Title,
@@ -41,14 +41,14 @@ const Signin: React.FC = () => {
           onChange={handleChange('password')}
         />
 
-        <Button onClick={handleSubmit}>Login</Button>
+        <Button type="button" onClick={handleSubmit}>Login</Button>
         {error && <ErrorText>{error}</ErrorText>}
 
         {/* show resend only if login failed due to activation */}
         {error === 'Account not activated. Please verify your account.' && (
           <>
             <InfoText>Didn't receive a code or it expired?</InfoText>
-            <ResendButton onClick={handleResend} disabled={!allowResend}>
+            <ResendButton type="button" onClick={handleResend} disabled={!allowResend}>
               {allowResend ? 'Resend Verification Code' : `Try again in ${formattedTimer}`}
             </ResendButton>
           </>

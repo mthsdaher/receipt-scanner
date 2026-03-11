@@ -1,83 +1,270 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import {
+  Menu,
+  X,
   Home,
   LayoutDashboard,
   History,
-  FilePlus2,
+  PlusCircle,
   LogIn,
-  UserPlus,
   LogOut,
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+
+const navItems = [
+  { path: '/', label: 'Home', icon: Home },
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/historic', label: 'Historic', icon: History },
+  { path: '/insert-receipt', label: 'Insert', icon: PlusCircle },
+];
 
 const Navbar: React.FC = () => {
   const location = useLocation();
   const { isLoggedIn, signOut } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Common items
-  const items = [
-    { path: '/', label: 'Home', icon: <Home size={20} /> },
-    { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-    { path: '/historic', label: 'Historic', icon: <History size={20} /> },
-    { path: '/insert-receipt', label: 'Insert', icon: <FilePlus2 size={20} /> },
-  ];
-
-  // Auth-specific
   const authItems = isLoggedIn
-    ? [{ action: signOut, label: 'Sign Out', icon: <LogOut size={20} /> }]
+    ? [{ action: signOut, label: 'Sign Out', icon: LogOut }]
     : [
-        { path: '/signin', label: 'Sign In', icon: <LogIn size={20} /> },
-        { path: '/signup', label: 'Sign Up', icon: <UserPlus size={20} /> },
+        { path: '/signin', label: 'Sign In', icon: LogIn },
+        { path: '/signup', label: 'Sign Up', icon: LogIn },
       ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="text-2xl font-bold tracking-wide text-black uppercase">
-          R<span className="text-blue-600">S</span>
-        </div>
+    <header
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        backgroundColor: '#fff',
+        borderBottom: '1px solid #e5e7eb',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+      }}
+    >
+      <nav
+        style={{
+          maxWidth: '1280px',
+          margin: '0 auto',
+          padding: '0 24px',
+          height: '64px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '32px',
+        }}
+      >
+        {/* Logo */}
+        <Link
+          to="/"
+          style={{
+            fontWeight: 700,
+            fontSize: '1.25rem',
+            color: '#111',
+            textDecoration: 'none',
+            flexShrink: 0,
+          }}
+          className="hover:opacity-70"
+        >
+          Receipt Scanner
+        </Link>
 
-        <div className="flex items-center space-x-2 md:space-x-4">
-          {items.map(({ path, label, icon }) => (
-            <Link
-              key={path}
-              to={path}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full transition duration-300 hover:bg-gray-100 ${
-                location.pathname === path ? 'bg-gray-200 font-semibold' : 'text-gray-700'
-              }`}
-            >
-              {icon}
-              <span className="hidden sm:inline">{label}</span>
-            </Link>
-          ))}
-
+        {/* Desktop: todos os links em uma linha horizontal */}
+        <div className="navbar-desktop">
+          {navItems.map(({ path, label, icon: Icon }) => {
+            const isActive = location.pathname === path;
+            return (
+              <Link
+                key={path}
+                to={path}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 0',
+                  fontSize: '15px',
+                  fontWeight: 500,
+                  color: isActive ? '#111' : '#374151',
+                  textDecoration: 'none',
+                  borderBottom: isActive ? '2px solid #111' : '2px solid transparent',
+                }}
+                className="hover:text-gray-600"
+              >
+                <Icon size={18} style={{ flexShrink: 0 }} />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+          <div
+            style={{
+              width: '1px',
+              height: '20px',
+              backgroundColor: '#e5e7eb',
+              marginLeft: 'auto',
+              marginRight: '8px',
+            }}
+          />
           {authItems.map((item) =>
             'path' in item ? (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full transition duration-300 hover:bg-gray-100 ${
-                  location.pathname === item.path ? 'bg-gray-200 font-semibold' : 'text-gray-700'
-                }`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 0',
+                  fontSize: '15px',
+                  fontWeight: 500,
+                  color: location.pathname === item.path ? '#111' : '#374151',
+                  textDecoration: 'none',
+                  borderBottom: location.pathname === item.path ? '2px solid #111' : '2px solid transparent',
+                }}
               >
-                {item.icon}
-                <span className="hidden sm:inline">{item.label}</span>
+                <item.icon size={18} style={{ flexShrink: 0 }} />
+                <span>{item.label}</span>
               </Link>
             ) : (
               <button
-                key={item.label}
+                type="button"
                 onClick={item.action}
-                className="flex items-center gap-2 px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition duration-300"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 0',
+                  fontSize: '15px',
+                  fontWeight: 500,
+                  color: '#374151',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
               >
-                {item.icon}
-                <span className="hidden sm:inline">{item.label}</span>
+                <item.icon size={18} style={{ flexShrink: 0 }} />
+                <span>{item.label}</span>
               </button>
             )
           )}
         </div>
-      </div>
-    </nav>
+
+        {/* Mobile: hamburger */}
+        <button
+          type="button"
+          onClick={() => setMobileOpen((o) => !o)}
+          style={{
+            padding: '8px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#111',
+          }}
+          className="navbar-mobile-btn"
+          aria-label={mobileOpen ? 'Fechar' : 'Menu'}
+        >
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </nav>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div
+          className="navbar-mobile-menu"
+          style={{
+            position: 'absolute',
+            top: '64px',
+            left: 0,
+            right: 0,
+            backgroundColor: '#fff',
+            borderTop: '1px solid #e5e7eb',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+            padding: '16px 24px 24px',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {navItems.map(({ path, label, icon: Icon }) => (
+              <Link
+                key={path}
+                to={path}
+                onClick={() => setMobileOpen(false)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 16px',
+                  fontSize: '15px',
+                  fontWeight: 500,
+                  color: location.pathname === path ? '#111' : '#4b5563',
+                  textDecoration: 'none',
+                  borderLeft: location.pathname === path ? '3px solid #111' : '3px solid transparent',
+                  marginLeft: '-3px',
+                }}
+              >
+                <Icon size={18} style={{ flexShrink: 0 }} />
+                <span>{label}</span>
+              </Link>
+            ))}
+          </div>
+          <div
+            style={{
+              marginTop: '16px',
+              paddingTop: '16px',
+              borderTop: '1px solid #e5e7eb',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+            }}
+          >
+            {authItems.map((item) =>
+              'path' in item ? (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileOpen(false)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    color: location.pathname === item.path ? '#111' : '#4b5563',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <item.icon size={18} style={{ flexShrink: 0 }} />
+                  <span>{item.label}</span>
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  key={item.label}
+                  onClick={() => { item.action(); setMobileOpen(false); }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    color: '#4b5563',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <item.icon size={18} style={{ flexShrink: 0 }} />
+                  <span>{item.label}</span>
+                </button>
+              )
+            )}
+          </div>
+        </div>
+      )}
+    </header>
   );
 };
 

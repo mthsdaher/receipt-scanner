@@ -13,8 +13,16 @@ import VerificationCode from "./pages/VerificationCode";
 const App: React.FC = () => (
   <>
     <Navbar />
-    <Routes>
-    <Route path="/" element={<Home />} />
+    <div
+      style={{
+        paddingTop: '64px',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <Routes>
+        <Route path="/" element={<Home />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify-code" element={<VerificationCode />} />
@@ -22,7 +30,8 @@ const App: React.FC = () => (
         <Route path="/historic" element={<div>Historic Page (To Be Implemented)</div>} />
         <Route path="/insert-receipt" element={<InsertReceipt />} />
         <Route path="/signout" element={<Signout />} />
-    </Routes>
+      </Routes>
+    </div>
   </>
 );
 

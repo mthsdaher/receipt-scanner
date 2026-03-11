@@ -2,6 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Navbar: layout horizontal no desktop (640px+) */
+.navbar-desktop {
+  display: none;
+}
+@media (min-width: 640px) {
+  .navbar-desktop {
+    display: flex !important;
+    flex-direction: row;
+    flex: 1;
+    align-items: center;
+    gap: 24px;
+  }
+}
+.navbar-mobile-btn {
+  display: flex;
+}
+@media (min-width: 640px) {
+  .navbar-mobile-btn {
+    display: none !important;
+  }
+}
+.navbar-mobile-menu {
+  display: block;
+}
+@media (min-width: 640px) {
+  .navbar-mobile-menu {
+    display: none !important;
+  }
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

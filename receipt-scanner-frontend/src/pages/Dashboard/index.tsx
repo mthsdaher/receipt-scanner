@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import Layout from '@components/Layout';
+import Layout from '../../components/Layout';
 import { Container, Title, Card, CardTitle, CardText } from './styles';
 import { useDashboardController } from './controller';
 
@@ -8,6 +8,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchReceipts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -15,9 +16,9 @@ const Dashboard = () => {
       <Container>
         <Title>Your Receipt Summary</Title>
         {receipts.map((receipt) => (
-          <Card key={receipt._id}>
+          <Card key={receipt.id}>
             <CardTitle>{receipt.description}</CardTitle>
-            <CardText>Total: ${receipt.totalValue}</CardText>
+            <CardText>Total: ${receipt.amount}</CardText>
             <CardText>Date: {new Date(receipt.date).toLocaleDateString()}</CardText>
           </Card>
         ))}

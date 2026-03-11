@@ -3,8 +3,22 @@ import Footer from './Footer';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="flex flex-col min-h-screen bg-white text-black pt-20">
-      <main className="flex-grow px-4 sm:px-6 lg:px-8">
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 'calc(100vh - 64px)',
+        backgroundColor: 'white',
+        color: 'black',
+      }}
+    >
+      <main
+        style={{
+          flex: 1,
+          padding: '1rem 1.5rem',
+        }}
+      >
         {children}
       </main>
       <Footer />

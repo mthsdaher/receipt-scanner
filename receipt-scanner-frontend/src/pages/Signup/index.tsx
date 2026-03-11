@@ -1,5 +1,5 @@
 import React from "react";
-import Layout from "@components/Layout";
+import Layout from "../../components/Layout";
 import { useSignupController } from "./controller";
 import { Container, Title, Input, Button, ErrorText } from "./styles";
 
@@ -23,7 +23,7 @@ const Signup: React.FC = () => {
           onChange={handleChange("password")}
         />
 
-        <Button onClick={handleSubmit}>Sign Up</Button>
+        <Button type="button" onClick={handleSubmit}>Sign Up</Button>
         {error && <ErrorText>{error}</ErrorText>}
       </Container>
     </Layout>
