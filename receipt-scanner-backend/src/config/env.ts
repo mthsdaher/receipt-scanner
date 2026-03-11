@@ -29,6 +29,7 @@ export const env = {
   PORT: Number(process.env.PORT ?? 3002),
   TRUST_PROXY: process.env.TRUST_PROXY === "true",
   TRUST_PROXY_HOPS: Number(process.env.TRUST_PROXY_HOPS ?? 1),
+  REQUEST_TIMEOUT_MS: Number(process.env.REQUEST_TIMEOUT_MS ?? 30000),
   JWT_SECRET: process.env.JWT_SECRET as string,
   DATABASE_URL: process.env.DATABASE_URL as string,
   OCR_SERVICE_URL: process.env.OCR_SERVICE_URL ?? "http://localhost:8000",
