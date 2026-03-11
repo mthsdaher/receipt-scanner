@@ -39,14 +39,14 @@ export const ErrorText = styled.p`
   text-align: center;
 `;
 
-// nova mensagem verde para status
+// Status message in green.
 export const InfoText = styled.p`
   color: #2e7d32;
   margin-top: 1rem;
   text-align: center;
 `;
 
-// botão de reenvio estilizado
+// Styled resend button.
 export const ResendButton = styled.button`
   display: block;
   margin: 0.5rem auto 0;

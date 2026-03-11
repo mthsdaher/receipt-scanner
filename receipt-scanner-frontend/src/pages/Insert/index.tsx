@@ -1,15 +1,39 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import Layout from '../../components/Layout';
 import { useInsertReceiptController } from './controller';
-import { styles } from './styles';
+import {
+  Card,
+  ErrorMessage,
+  Field,
+  FileNameText,
+  FileRow,
+  FormGrid,
+  HelperText,
+  HiddenInput,
+  LoadingStatus,
+  LoadingText,
+  PageContainer,
+  PrimaryButton,
+  SaveButton,
+  SecondaryButton,
+  Section,
+  Subtitle,
+  SuccessMessage,
+  TextInput,
+  Title,
+} from './styles';
 
 const InsertReceipt: React.FC = () => {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const {
     file,
-    parsedData,
+    receiptForm,
     loading,
+    saving,
     saved,
+    error,
     handleFileChange,
+    handleFieldChange,
     handleUpload,
     handleSave,
     userId,
@@ -17,54 +41,144 @@ const InsertReceipt: React.FC = () => {
 
   return (
     <Layout>
-      <div
-        className={styles.container}
-        style={{ width: "100%", maxWidth: "1240px", margin: "0 auto" }}
-      >
-        <h1 className={styles.title}>Insert Receipt</h1>
+      <PageContainer>
+        <Card>
+          <Title>Insert Receipt</Title>
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className={styles.input}
-        />
+          <HelperText>
+          Upload a receipt image for OCR, or manually fill the fields below.
+          </HelperText>
 
-        <button
-          type="button"
-          onClick={handleUpload}
-          className={styles.button}
-          disabled={!file || loading}
-        >
-          {loading ? 'Processing...' : 'Upload & Extract'}
-        </button>
+          <HiddenInput
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+          />
 
-        {parsedData && (
-          <div className={styles.section}>
-            <h2 className={styles.subtitle}>Extracted Data</h2>
-            <div className={styles.dataItem}>
-              <p><strong>Store:</strong> {parsedData.store}</p>
-              <p><strong>Total:</strong> ${parsedData.total.toFixed(2)}</p>
-              <p><strong>Date:</strong> {parsedData.date}</p>
-            </div>
+          <FileRow>
+            <SecondaryButton
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+            >
+              Choose receipt image
+            </SecondaryButton>
+            <FileNameText>
+            {file ? file.name : "No file selected"}
+            </FileNameText>
+          </FileRow>
 
-            <button
+          <PrimaryButton
+            type="button"
+            onClick={handleUpload}
+            disabled={!file || loading}
+          >
+            {loading ? 'Processing OCR...' : 'Upload & Extract'}
+          </PrimaryButton>
+
+        {loading && (
+          <LoadingStatus role="status" aria-live="polite">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              style={{ display: "block" }}
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="#99f6e4"
+                strokeWidth="3"
+                fill="none"
+              />
+              <path
+                d="M22 12a10 10 0 0 1-10 10"
+                stroke="#0f766e"
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+              >
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 12 12"
+                  to="360 12 12"
+                  dur="0.9s"
+                  repeatCount="indefinite"
+                />
+              </path>
+            </svg>
+            <LoadingText>
+              Your receipt is being processed. Please wait...
+            </LoadingText>
+          </LoadingStatus>
+        )}
+
+          <Section>
+            <Subtitle>Receipt Data</Subtitle>
+            <FormGrid>
+              <Field>
+              <span>Store / Description</span>
+              <TextInput
+                type="text"
+                value={receiptForm.store}
+                onChange={handleFieldChange("store")}
+                placeholder="e.g. Supermarket ABC"
+              />
+              </Field>
+
+              <Field>
+              <span>Total amount</span>
+              <TextInput
+                type="number"
+                min="0"
+                step="0.01"
+                value={receiptForm.total}
+                onChange={handleFieldChange("total")}
+                placeholder="0.00"
+              />
+              </Field>
+
+              <Field>
+              <span>Date</span>
+              <TextInput
+                type="date"
+                value={receiptForm.date}
+                onChange={handleFieldChange("date")}
+              />
+              </Field>
+
+              <Field>
+              <span>Category</span>
+              <TextInput
+                type="text"
+                value={receiptForm.category}
+                onChange={handleFieldChange("category")}
+                placeholder="e.g. grocery"
+              />
+              </Field>
+            </FormGrid>
+
+            <SaveButton
               type="button"
               onClick={handleSave}
-              className={styles.saveButton}
-              disabled={!userId}
+              disabled={!userId || saving}
             >
-              Save to Database
-            </button>
+              {saving ? "Saving..." : "Save to Database"}
+            </SaveButton>
 
-            {saved && (
-              <p className={styles.successMessage}>
-                Receipt saved successfully!
-              </p>
-            )}
-          </div>
-        )}
-      </div>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+          {saved && (
+              <SuccessMessage>
+              Receipt saved successfully.
+              </SuccessMessage>
+          )}
+          </Section>
+        </Card>
+      </PageContainer>
     </Layout>
   );
 };

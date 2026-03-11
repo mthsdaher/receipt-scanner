@@ -15,7 +15,7 @@ import {
 const navItems = [
   { path: '/', label: 'Home', icon: Home },
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/historic', label: 'Historic', icon: History },
+  { path: '/historic', label: 'History', icon: History },
   { path: '/insert-receipt', label: 'Insert', icon: PlusCircle },
 ];
 
@@ -70,7 +70,7 @@ const Navbar: React.FC = () => {
           Receipt Scanner
         </Link>
 
-        {/* Desktop: todos os links em uma linha horizontal */}
+        {/* Desktop navigation */}
         <div className="navbar-desktop">
           {navItems.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname === path;
@@ -149,7 +149,7 @@ const Navbar: React.FC = () => {
           )}
         </div>
 
-        {/* Mobile: hamburger */}
+        {/* Mobile toggle button */}
         <button
           type="button"
           onClick={() => setMobileOpen((o) => !o)}
@@ -161,7 +161,7 @@ const Navbar: React.FC = () => {
             color: '#111',
           }}
           className="navbar-mobile-btn"
-          aria-label={mobileOpen ? 'Fechar' : 'Menu'}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
         >
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>

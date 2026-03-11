@@ -445,7 +445,12 @@
     "/api/paddle/ocr": {
       "post": {
         "summary": "Upload an image and run OCR",
-        "description": "Uploads a receipt image, forwards it to the PaddleOCR FastAPI service and returns the parsed result.",
+        "description": "Uploads a receipt image, forwards it to the PaddleOCR FastAPI service and returns the parsed result. Requires JWT authentication.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -456,7 +461,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "Image file of the receipt."
+                    "description": "Image file of the receipt. Allowed: JPG, PNG, WEBP. Max size: 5MB."
                   }
                 },
                 "required": ["file"]
@@ -491,7 +496,16 @@
             }
           },
           "400": {
-            "description": "File missing"
+            "description": "File missing or invalid upload payload"
+          },
+          "401": {
+            "description": "Unauthorized (missing or invalid JWT)"
+          },
+          "413": {
+            "description": "Payload too large (file exceeds 5MB)"
+          },
+          "415": {
+            "description": "Unsupported media type (allowed: JPG, PNG, WEBP)"
           },
           "500": {
             "description": "Failed to process image with OCR"
@@ -765,5 +779,5 @@
       "BearerAuth": []
     }
   ]
-}
+  }
 }

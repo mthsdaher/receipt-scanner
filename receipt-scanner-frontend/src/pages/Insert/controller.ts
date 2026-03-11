@@ -4,30 +4,55 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAuthUserId } from "../../hooks/useAuthUserId";
 import { apiClient } from "../../services/apiClient";
 
+interface ReceiptFormData {
+  store: string;
+  total: string;
+  date: string;
+  category: string;
+}
+
+const EMPTY_FORM: ReceiptFormData = {
+  store: "",
+  total: "",
+  date: "",
+  category: "grocery",
+};
+
 export const useInsertReceiptController = () => {
   const { signOut } = useAuth();
   const userId = useAuthUserId();
 
   const [file, setFile] = useState<File | null>(null);
-  const [parsedData, setParsedData] = useState<ParsedReceipt | null>(null);
+  const [receiptForm, setReceiptForm] = useState<ReceiptFormData>(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-      setParsedData(null);
-      setSaved(false);
-    }
+    const selectedFile = e.target.files?.[0] ?? null;
+    setFile(selectedFile);
+    setSaved(false);
+    setError("");
   };
 
-  // Upload image to backend — receives { store, total, date } directly
+  const handleFieldChange =
+    (field: keyof ReceiptFormData) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      setReceiptForm((current) => ({ ...current, [field]: event.target.value }));
+      setSaved(false);
+      setError("");
+    };
+
+  // Upload image to backend — receives { store, total, date } directly.
+  // Users can still edit these values before saving.
   const handleUpload = async () => {
     if (!file) return;
 
     const formData = new FormData();
     formData.append("file", file);
     setLoading(true);
+    setError("");
+    setSaved(false);
 
     try {
       const data = await apiClient.postForm<ParsedReceipt>(
@@ -35,43 +60,67 @@ export const useInsertReceiptController = () => {
         formData,
         signOut
       );
-      console.log("Parsed receipt:", data);
-      setParsedData(data);
+
+      setReceiptForm({
+        store: data.store ?? "",
+        total: data.total !== undefined && data.total !== null ? String(data.total) : "",
+        date: data.date ?? "",
+        category: "grocery",
+      });
     } catch (err) {
       console.error("OCR upload failed:", err);
+      setError("Failed to process OCR. You can still fill the receipt manually.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Save parsed receipt data to the database
+  // Save parsed/manual receipt data to the database.
   const handleSave = async () => {
-    if (!parsedData || !userId) return;
+    if (!userId) return;
+    if (!receiptForm.store.trim() || !receiptForm.total.trim() || !receiptForm.date.trim()) {
+      setError("Please provide store, total amount, and date before saving.");
+      return;
+    }
+
+    const amount = Number(receiptForm.total);
+    if (Number.isNaN(amount) || amount < 0) {
+      setError("Total amount must be a valid positive number.");
+      return;
+    }
 
     try {
+      setSaving(true);
+      setError("");
       await apiClient.post(
         "/api/receipts",
         {
-          amount: parsedData.total,
-          date: parsedData.date,
-          description: parsedData.store,
-          category: "grocery",
+          amount,
+          date: receiptForm.date,
+          description: receiptForm.store.trim(),
+          category: receiptForm.category.trim() || "grocery",
         },
         signOut
       );
       setSaved(true);
     } catch (err) {
       console.error("Failed to save receipt:", err);
+      setError("Failed to save receipt. Please review the data and try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
   return {
     file,
-    parsedData,
+    receiptForm,
     loading,
+    saving,
     saved,
+    error,
     userId,
     handleFileChange,
+    handleFieldChange,
     handleUpload,
     handleSave,
   };

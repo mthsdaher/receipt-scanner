@@ -17,6 +17,55 @@ except Exception:
 
 app = FastAPI()
 ocr = None
+# Moving average used to estimate OCR runtime progress.
+ocr_avg_runtime_s = 6.0
+
+
+def log_progress(percent: int, message: str) -> None:
+    """Print progress updates to terminal only (not returned to frontend)."""
+    bounded = max(0, min(100, int(percent)))
+    print(f"⏳ [PROGRESS] {bounded:3d}% — {message}")
+
+
+async def run_ocr_with_progress(image_path: str, original_filename: str):
+    """
+    Run OCR in a background thread while emitting estimated progress.
+    Progress is stage-based + time-based estimate because PaddleOCR does not
+    expose native per-step percentage callbacks.
+    """
+    global ocr_avg_runtime_s
+
+    loop = asyncio.get_event_loop()
+    start = perf_counter()
+    future = loop.run_in_executor(None, lambda: ocr.ocr(image_path))
+
+    last_percent = 45
+    log_progress(last_percent, f"OCR started for '{original_filename}'")
+
+    while not future.done():
+        elapsed = perf_counter() - start
+        estimated_total = max(ocr_avg_runtime_s, 1.5)
+
+        # Progress range during OCR execution: 45% -> 90%
+        dynamic_percent = 45 + min(45, (elapsed / estimated_total) * 45)
+        current_percent = int(dynamic_percent)
+
+        if current_percent > last_percent:
+            last_percent = current_percent
+            log_progress(
+                last_percent,
+                f"Running text detection and recognition ({elapsed:.1f}s)",
+            )
+        await asyncio.sleep(0.4)
+
+    result = await future
+    duration = perf_counter() - start
+
+    # Update moving average to make future progress estimates more realistic.
+    smoothing = 0.25
+    ocr_avg_runtime_s = (1 - smoothing) * ocr_avg_runtime_s + smoothing * duration
+
+    return result, duration
 
 # -------------------------------------------------------------------
 # Load OCR model once at startup
@@ -81,8 +130,12 @@ def parse_receipt(lines: list[str]) -> dict:
 async def read_image(file: UploadFile = File(...)):
     temp_filename = None
     try:
+        log_progress(5, "Reading uploaded image")
+
         # Read file into memory to avoid Windows file lock issues
         file_bytes = await file.read()
+        log_progress(15, "Preparing image in memory")
+
         with Image.open(BytesIO(file_bytes)) as img:
             # Downscale large images for performance
             if max(img.size) > 2000:
@@ -90,14 +143,14 @@ async def read_image(file: UploadFile = File(...)):
             with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
                 temp_filename = tmp.name
                 img.convert("RGB").save(temp_filename, format="JPEG")
+        log_progress(35, "Image pre-processing complete")
 
         print(f"🔸 [PROCESS] Running OCR for '{file.filename}'...")
         start = perf_counter()
 
-        # Run OCR in a thread to avoid blocking the event loop
-        result = await asyncio.get_event_loop().run_in_executor(
-            None, lambda: ocr.ocr(temp_filename)
-        )
+        # Run OCR with terminal-only progress updates.
+        result, ocr_duration = await run_ocr_with_progress(temp_filename, file.filename)
+        log_progress(90, f"OCR finished in {ocr_duration:.2f}s, parsing text")
 
         # PaddleOCR v3 returns a list of dicts — extract text from 'rec_texts'
         lines = []
@@ -108,6 +161,7 @@ async def read_image(file: UploadFile = File(...)):
                     lines.append(text)
 
         parsed = parse_receipt(lines)
+        log_progress(100, "Receipt parsing complete")
         print(f"✅ [DONE] {perf_counter() - start:.2f}s — {parsed}")
 
         return JSONResponse(content=parsed)

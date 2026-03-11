@@ -10,6 +10,7 @@ import {
   resendVerificationCode,
 } from "../controllers/userController";
 import { currentUser } from "../middleware/current-user";
+import { requireAuth } from "../middleware/require-auth";
 
 const { check } = require("express-validator");
 const router = Router();
@@ -50,11 +51,13 @@ router.post(
 );
 
 // GET /api/users
-router.get("/", getUsers);
+router.get("/", currentUser, requireAuth, getUsers);
 
 // DELETE /api/users/deleteUser
 router.delete(
   "/deleteUser",
+  currentUser,
+  requireAuth,
   [check("email").isEmail().withMessage("Valid email is required")],
   deleteUser
 );
