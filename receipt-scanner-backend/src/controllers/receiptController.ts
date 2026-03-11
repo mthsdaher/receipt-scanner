@@ -16,8 +16,7 @@ import { asyncHandler } from "../middleware/asyncHandler";
 const createReceipt = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    res.status(400).json({ status: "error", message: "Validation failed", errors: errors.array() });
-    return;
+    throw errors;
   }
 
   const currentUser = req.currentUser;
