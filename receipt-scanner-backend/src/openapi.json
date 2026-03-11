@@ -700,6 +700,15 @@
           "429": {
             "description": "Too many OCR requests"
           },
+          "502": {
+            "description": "OCR upstream service returned an invalid/error response"
+          },
+          "503": {
+            "description": "OCR service unavailable"
+          },
+          "504": {
+            "description": "OCR upstream timeout"
+          },
           "500": {
             "description": "Failed to process image with OCR"
           }

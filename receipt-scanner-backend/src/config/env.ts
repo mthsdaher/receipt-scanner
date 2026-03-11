@@ -83,6 +83,11 @@ export const env = {
     10000,
     "DB_CONNECTION_TIMEOUT_MS"
   ),
+  OCR_UPSTREAM_TIMEOUT_MS: parsePositiveInteger(
+    process.env.OCR_UPSTREAM_TIMEOUT_MS,
+    45000,
+    "OCR_UPSTREAM_TIMEOUT_MS"
+  ),
   JWT_SECRET: process.env.JWT_SECRET as string,
   DATABASE_URL: process.env.DATABASE_URL as string,
   OCR_SERVICE_URL: process.env.OCR_SERVICE_URL ?? "http://localhost:8000",
