@@ -17,7 +17,10 @@ const InsertReceipt: React.FC = () => {
 
   return (
     <Layout>
-      <div className={styles.container}>
+      <div
+        className={styles.container}
+        style={{ width: "100%", maxWidth: "1240px", margin: "0 auto" }}
+      >
         <h1 className={styles.title}>Insert Receipt</h1>
 
         <input

@@ -1,5 +1,6 @@
 export const styles = {
-    container: "max-w-3xl mx-auto bg-white shadow rounded p-6",
+    // Keep the same horizontal alignment baseline used by Dashboard/History.
+    container: "w-full max-w-7xl mx-auto bg-white shadow rounded p-6",
     title: "text-2xl font-bold mb-4",
     input: "mb-4 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700",
     button:
