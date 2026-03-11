@@ -1,0 +1,69 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: receipt-scanner-postgres
+    environment:
+      POSTGRES_DB: receipt_scanner
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./receipt-scanner-backend/database/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d receipt_scanner"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ocr:
+    build:
+      context: ./receipt-scanner-frontend
+      dockerfile: Dockerfile.ocr
+    container_name: receipt-scanner-ocr
+    ports:
+      - "8000:8000"
+
+  backend:
+    build:
+      context: ./receipt-scanner-backend
+      dockerfile: Dockerfile
+    container_name: receipt-scanner-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ocr:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      JWT_SECRET: 9dc6c53a28648090acaa665d32d2f5c7756d3f5631b101901654bb41b634a140
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/receipt_scanner
+      OCR_SERVICE_URL: http://ocr:8000
+      FRONTEND_URL: http://localhost:3000
+      TRUST_PROXY: "true"
+      TRUST_PROXY_HOPS: 1
+      REQUEST_TIMEOUT_MS: 30000
+      DB_POOL_MAX: 10
+      DB_IDLE_TIMEOUT_MS: 30000
+      DB_CONNECTION_TIMEOUT_MS: 10000
+      OCR_UPSTREAM_TIMEOUT_MS: 45000
+    ports:
+      - "3002:3002"
+
+  frontend:
+    build:
+      context: ./receipt-scanner-frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: /api
+    container_name: receipt-scanner-frontend
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres_data:

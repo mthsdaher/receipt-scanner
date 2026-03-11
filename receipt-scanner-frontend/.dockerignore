@@ -1,0 +1,14 @@
+node_modules
+build
+dist
+.cache
+.vite
+.venv
+env
+venv
+__pycache__
+*.pyc
+temp_*.jpg
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
