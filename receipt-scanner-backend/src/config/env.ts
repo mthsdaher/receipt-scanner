@@ -1,11 +1,20 @@
 import { config as loadDotenv } from "dotenv";
+import fs from "fs";
 import path from "path";
 
 const nodeEnv = process.env.NODE_ENV ?? "development";
-const envFileName =
-  nodeEnv === "production" ? ".env.production" : ".env.development";
+const envFileCandidates =
+  nodeEnv === "production"
+    ? [".env.production", ".env"]
+    : [".env.development", ".env"];
 
-loadDotenv({ path: path.resolve(process.cwd(), envFileName) });
+const resolvedEnvPath = envFileCandidates
+  .map((fileName) => path.resolve(process.cwd(), fileName))
+  .find((candidatePath) => fs.existsSync(candidatePath));
+
+if (resolvedEnvPath) {
+  loadDotenv({ path: resolvedEnvPath });
+}
 
 const requiredEnvVars = ["JWT_SECRET", "DATABASE_URL"] as const;
 
