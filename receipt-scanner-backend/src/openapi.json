@@ -444,7 +444,7 @@
                   "category": {
                     "type": "string",
                     "example": "grocery",
-                    "description": "Optional receipt category."
+                    "description": "Optional receipt category. Stored normalized in lowercase; defaults to uncategorized when omitted."
                   }
                 },
                 "required": ["amount", "date", "description"]
