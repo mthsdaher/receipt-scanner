@@ -3,7 +3,7 @@
 This project can run as a full demo stack with one command:
 
 ```bash
-docker compose up --build
+docker compose --env-file .env.docker up --build
 ```
 
 ## Services
@@ -27,7 +27,7 @@ docker compose up --build
 Start in background:
 
 ```bash
-docker compose up --build -d
+docker compose --env-file .env.docker up --build -d
 ```
 
 Stop services:
@@ -48,8 +48,25 @@ View logs:
 docker compose logs -f
 ```
 
+## Environment setup
+
+Before first run:
+
+```bash
+cp .env.docker.example .env.docker
+```
+
+Then edit at least:
+
+- `JWT_SECRET`
+- `FRONTEND_URL`
+- `FRONTEND_URLS`
+- database credentials if needed
+
 ## Notes
 
 - The default JWT secret in compose is for demo only.
 - OCR image build can take longer on first run due to Python dependencies.
 - Frontend calls the backend through Nginx proxy (`/api`), so browser CORS stays simple.
+- For production-like deployment profile, use:
+  - `docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.prod.yml up -d --build`

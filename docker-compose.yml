@@ -3,19 +3,20 @@ services:
     image: postgres:16-alpine
     container_name: receipt-scanner-postgres
     environment:
-      POSTGRES_DB: receipt_scanner
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-receipt_scanner}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./receipt-scanner-backend/database/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d receipt_scanner"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-receipt_scanner}"]
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
   ocr:
     build:
@@ -24,6 +25,12 @@ services:
     container_name: receipt-scanner-ocr
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
   backend:
     build:
@@ -34,14 +41,15 @@ services:
       postgres:
         condition: service_healthy
       ocr:
-        condition: service_started
+        condition: service_healthy
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-production}
       PORT: 3002
-      JWT_SECRET: 9dc6c53a28648090acaa665d32d2f5c7756d3f5631b101901654bb41b634a140
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/receipt_scanner
+      JWT_SECRET: ${JWT_SECRET:-replace-me-in-env-file}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-receipt_scanner}
       OCR_SERVICE_URL: http://ocr:8000
-      FRONTEND_URL: http://localhost:3000
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      FRONTEND_URLS: ${FRONTEND_URLS:-http://localhost:3000}
       TRUST_PROXY: "true"
       TRUST_PROXY_HOPS: 1
       REQUEST_TIMEOUT_MS: 30000
@@ -51,6 +59,12 @@ services:
       OCR_UPSTREAM_TIMEOUT_MS: 45000
     ports:
       - "3002:3002"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3002/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
   frontend:
     build:
@@ -61,9 +75,15 @@ services:
     container_name: receipt-scanner-frontend
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "3000:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
 volumes:
   postgres_data:

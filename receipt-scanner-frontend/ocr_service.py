@@ -21,6 +21,11 @@ ocr = None
 ocr_avg_runtime_s = 6.0
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "ocr"}
+
+
 def log_progress(percent: int, message: str) -> None:
     """Print progress updates to terminal only (not returned to frontend)."""
     bounded = max(0, min(100, int(percent)))

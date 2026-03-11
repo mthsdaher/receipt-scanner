@@ -1,0 +1,16 @@
+services:
+  postgres:
+    ports: []
+
+  ocr:
+    ports: []
+
+  backend:
+    ports: []
+    environment:
+      FRONTEND_URL: ${FRONTEND_URL}
+      FRONTEND_URLS: ${FRONTEND_URLS}
+
+  frontend:
+    ports:
+      - "80:80"

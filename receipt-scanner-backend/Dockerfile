@@ -18,6 +18,9 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
+RUN chown -R node:node /app
+
+USER node
 
 EXPOSE 3002
 
