@@ -1,82 +1,8 @@
 import { env } from "./config/env";
-import express from "express";
 import { Server } from "http";
-import path from "path";
-import cors from "cors";
-import helmet from "helmet";
-import swaggerUi from "swagger-ui-express";
 import { closeDB, connectDB } from "./config/database";
-import { NotFoundError } from "./errors/AppError";
-import { errorHandler } from "./middleware/errorHandler";
-import logger, { appLogger } from "./middleware/logger";
-import { requestTimeout } from "./middleware/request-timeout";
-import { apiRateLimiter } from "./middleware/rate-limiters";
-import userRoutes from "./routes/userRoutes";
-import receiptRoutes from "./routes/receiptRoutes";
-import ocrProxy from "./routes/ocrProxy";
-import healthRoutes from "./routes/healthRoutes";
-
-const app = express();
-app.disable("x-powered-by");
-const allowedOrigins =
-  env.FRONTEND_URLS.length > 0 ? env.FRONTEND_URLS : [env.FRONTEND_URL];
-
-if (env.TRUST_PROXY) {
-  app.set("trust proxy", env.TRUST_PROXY_HOPS);
-}
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow server-to-server and CLI tools (no Origin header).
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      appLogger.warn("cors_origin_blocked", {
-        origin,
-        allowedOrigins,
-      });
-      callback(null, false);
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true,
-  })
-);
-
-// Security headers baseline hardening.
-app.use(helmet());
-
-// Global payload limits to reduce request amplification abuse.
-app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ extended: true, limit: "1mb" }));
-app.use(logger);
-app.use(requestTimeout);
-
-// Broad per-IP API rate limit.
-app.use("/api", apiRateLimiter);
-
-const openapiPath = path.resolve(__dirname, "openapi.json");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(require(openapiPath)));
-
-app.use("/api/users", userRoutes);
-app.use("/api/receipts", receiptRoutes);
-app.use("/api/paddle", ocrProxy);
-app.use("/", healthRoutes);
-
-app.use((_req, _res, next) => {
-  next(new NotFoundError("Route not found"));
-});
-
-/** Centralized error handling - must be last */
-app.use(errorHandler);
+import app from "./app";
+import { appLogger } from "./middleware/logger";
 
 let server: Server | undefined;
 let shuttingDown = false;

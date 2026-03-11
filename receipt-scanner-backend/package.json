@@ -7,7 +7,8 @@
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
     "seed": "ts-node src/seeds/seed.ts",
-    "check:openapi": "node -e \"JSON.parse(require('fs').readFileSync('src/openapi.json','utf8')); console.log('openapi.json is valid');\""
+    "check:openapi": "node -e \"JSON.parse(require('fs').readFileSync('src/openapi.json','utf8')); console.log('openapi.json is valid');\"",
+    "test": "jest --runInBand"
   },
   "repository": {
     "type": "git",
@@ -42,12 +43,17 @@
     "@types/express": "^5.0.0",
     "@types/express-validator": "^2.20.33",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/jest": "^30.0.0",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.13.5",
     "@types/nodemailer": "^7.0.11",
     "@types/pg": "^8.16.0",
+    "@types/supertest": "^6.0.3",
+    "jest": "^30.2.0",
     "nodemon": "^3.1.9",
+    "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
+    "ts-jest": "^29.4.4",
     "typescript": "^5.7.3"
   }
 }
