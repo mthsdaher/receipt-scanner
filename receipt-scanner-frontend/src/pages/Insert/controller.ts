@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ParsedReceipt, extractReceiptData } from "../../utils/dataExtractor";
+import { ParsedReceipt } from "../../utils/dataExtractor";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAuthUserId } from "../../hooks/useAuthUserId";
 import { apiClient } from "../../services/apiClient";
@@ -10,7 +10,6 @@ export const useInsertReceiptController = () => {
 
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<ParsedReceipt | null>(null);
-  const [ocrLines, setOcrLines] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -22,6 +21,7 @@ export const useInsertReceiptController = () => {
     }
   };
 
+  // Upload image to backend — receives { store, total, date } directly
   const handleUpload = async () => {
     if (!file) return;
 
@@ -30,13 +30,13 @@ export const useInsertReceiptController = () => {
     setLoading(true);
 
     try {
-      const data = await apiClient.postForm<{ lines: string[] }>(
+      const data = await apiClient.postForm<ParsedReceipt>(
         "/api/paddle/ocr",
         formData,
         signOut
       );
-      setOcrLines(data.lines);
-      setParsedData(extractReceiptData(data.lines));
+      console.log("Parsed receipt:", data);
+      setParsedData(data);
     } catch (err) {
       console.error("OCR upload failed:", err);
     } finally {
@@ -44,6 +44,7 @@ export const useInsertReceiptController = () => {
     }
   };
 
+  // Save parsed receipt data to the database
   const handleSave = async () => {
     if (!parsedData || !userId) return;
 
@@ -67,7 +68,6 @@ export const useInsertReceiptController = () => {
   return {
     file,
     parsedData,
-    ocrLines,
     loading,
     saved,
     userId,
