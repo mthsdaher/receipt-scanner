@@ -24,12 +24,37 @@ for (const variableName of requiredEnvVars) {
   }
 }
 
+const parsePositiveInteger = (
+  rawValue: string | undefined,
+  defaultValue: number,
+  variableName: string
+): number => {
+  if (rawValue === undefined || rawValue.trim() === "") {
+    return defaultValue;
+  }
+
+  const parsed = Number(rawValue);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`${variableName} must be a positive integer`);
+  }
+
+  return parsed;
+};
+
 export const env = {
   NODE_ENV: nodeEnv,
-  PORT: Number(process.env.PORT ?? 3002),
+  PORT: parsePositiveInteger(process.env.PORT, 3002, "PORT"),
   TRUST_PROXY: process.env.TRUST_PROXY === "true",
-  TRUST_PROXY_HOPS: Number(process.env.TRUST_PROXY_HOPS ?? 1),
-  REQUEST_TIMEOUT_MS: Number(process.env.REQUEST_TIMEOUT_MS ?? 30000),
+  TRUST_PROXY_HOPS: parsePositiveInteger(
+    process.env.TRUST_PROXY_HOPS,
+    1,
+    "TRUST_PROXY_HOPS"
+  ),
+  REQUEST_TIMEOUT_MS: parsePositiveInteger(
+    process.env.REQUEST_TIMEOUT_MS,
+    30000,
+    "REQUEST_TIMEOUT_MS"
+  ),
   JWT_SECRET: process.env.JWT_SECRET as string,
   DATABASE_URL: process.env.DATABASE_URL as string,
   OCR_SERVICE_URL: process.env.OCR_SERVICE_URL ?? "http://localhost:8000",
