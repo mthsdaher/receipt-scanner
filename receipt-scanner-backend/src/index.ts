@@ -2,9 +2,11 @@ import { env } from "./config/env";
 import express from "express";
 import path from "path";
 import cors from "cors";
+import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import { connectDB } from "./config/database";
 import { errorHandler } from "./middleware/errorHandler";
+import { apiRateLimiter } from "./middleware/rate-limiters";
 import userRoutes from "./routes/userRoutes";
 import receiptRoutes from "./routes/receiptRoutes";
 import ocrProxy from "./routes/ocrProxy";
@@ -19,7 +21,15 @@ app.use(
   })
 );
 
-app.use(express.json());
+// Security headers baseline hardening.
+app.use(helmet());
+
+// Global payload limits to reduce request amplification abuse.
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+
+// Broad per-IP API rate limit.
+app.use("/api", apiRateLimiter);
 
 const openapiPath = path.resolve(__dirname, "openapi.json");
 // eslint-disable-next-line @typescript-eslint/no-require-imports

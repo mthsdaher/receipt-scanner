@@ -6,6 +6,7 @@ import fs from "fs";
 import { env } from "../config/env";
 import { currentUser } from "../middleware/current-user";
 import { requireAuth } from "../middleware/require-auth";
+import { ocrRateLimiter } from "../middleware/rate-limiters";
 
 const router = express.Router();
 const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -70,7 +71,7 @@ const handleUpload = (req: express.Request, res: express.Response, next: express
   });
 };
 
-router.post("/ocr", currentUser, requireAuth, handleUpload, async (req, res) => {
+router.post("/ocr", currentUser, requireAuth, ocrRateLimiter, handleUpload, async (req, res) => {
   const filePath = req.file?.path;
 
   if (!filePath) {

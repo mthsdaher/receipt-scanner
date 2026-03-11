@@ -341,29 +341,35 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": { "type": "string", "example": "uuid-receipt-id" },
-                    "userId": { "type": "string", "example": "uuid-user-id" },
-                    "amount": { "type": "number", "example": 123.45 },
-                    "date": {
-                      "type": "string",
-                      "format": "date-time",
-                      "example": "2024-01-31T00:00:00.000Z"
-                    },
-                    "description": {
-                      "type": "string",
-                      "example": "Supermarket ABC"
-                    },
-                    "category": {
-                      "type": "string",
-                      "example": "grocery"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "example": "uuid-receipt-id" },
+                        "userId": { "type": "string", "example": "uuid-user-id" },
+                        "amount": { "type": "number", "example": 123.45 },
+                        "date": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-01-31T00:00:00.000Z"
+                        },
+                        "description": {
+                          "type": "string",
+                          "example": "Supermarket ABC"
+                        },
+                        "category": {
+                          "type": "string",
+                          "example": "grocery"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
                     }
                   }
                 }
@@ -406,26 +412,32 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": { "type": "string" },
-                      "userId": { "type": "string" },
-                      "amount": { "type": "number" },
-                      "date": {
-                        "type": "string",
-                        "format": "date-time"
-                      },
-                      "description": { "type": "string" },
-                      "category": { "type": "string" },
-                      "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
-                      },
-                      "updatedAt": {
-                        "type": "string",
-                        "format": "date-time"
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "userId": { "type": "string" },
+                          "amount": { "type": "number" },
+                          "date": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "description": { "type": "string" },
+                          "category": { "type": "string" },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
                       }
                     }
                   }
@@ -475,20 +487,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "store": {
-                      "type": "string",
-                      "example": "Supermarket ABC"
-                    },
-                    "total": {
-                      "type": "number",
-                      "example": 123.45
-                    },
-                    "date": {
-                      "type": "string",
-                      "format": "date",
-                      "example": "2024-01-31"
+                    "type": "object",
+                    "properties": {
+                      "store": {
+                        "type": "string",
+                        "example": "Supermarket ABC"
+                      },
+                      "total": {
+                        "type": "number",
+                        "example": 123.45
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-01-31"
+                      }
                     }
                   }
                 }
@@ -506,6 +519,9 @@
           },
           "415": {
             "description": "Unsupported media type (allowed: JPG, PNG, WEBP)"
+          },
+          "429": {
+            "description": "Too many OCR requests"
           },
           "500": {
             "description": "Failed to process image with OCR"
@@ -779,5 +795,4 @@
       "BearerAuth": []
     }
   ]
-  }
 }

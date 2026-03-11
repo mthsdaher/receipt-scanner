@@ -35,7 +35,10 @@ const createReceipt = asyncHandler(async (req: Request, res: Response): Promise<
     category,
   });
 
-  res.status(201).json(receipt);
+  res.status(201).json({
+    status: "success",
+    data: receipt,
+  });
 });
 
 const getUserReceipts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
@@ -45,7 +48,10 @@ const getUserReceipts = asyncHandler(async (req: Request, res: Response): Promis
   ReceiptService.assertCanAccess(requestedUserId, currentUser?.id);
 
   const receipts = await ReceiptService.findByUserId(requestedUserId);
-  res.json(receipts);
+  res.json({
+    status: "success",
+    data: receipts,
+  });
 });
 
 /** Placeholder: real OCR integration would go here */
@@ -59,7 +65,10 @@ const scanReceipt = asyncHandler(async (_req: Request, res: Response): Promise<v
     taxes: 10,
     totalValue: calculateReceiptTotal(100, 10),
   };
-  res.status(200).json(simulatedData);
+  res.status(200).json({
+    status: "success",
+    data: simulatedData,
+  });
 });
 
 export { createReceipt, getUserReceipts, scanReceipt };

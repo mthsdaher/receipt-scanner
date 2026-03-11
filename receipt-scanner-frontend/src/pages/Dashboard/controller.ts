@@ -13,6 +13,11 @@ import {
   UseDashboardControllerReturn,
 } from "./types";
 
+interface ApiSuccessResponse<T> {
+  status: "success";
+  data: T;
+}
+
 /**
  * Converts backend receipt payloads into a normalized numeric value.
  * Some environments may send amount while others may expose totalValue.
@@ -67,11 +72,11 @@ export const useDashboardController = (): UseDashboardControllerReturn => {
     setLoading(true);
     setError("");
     try {
-      const data = await apiClient.get<Receipt[]>(
+      const response = await apiClient.get<ApiSuccessResponse<Receipt[]>>(
         `/api/receipts/${userId}`,
         signOut
       );
-      setReceipts(data);
+      setReceipts(response.data);
     } catch (err) {
       console.error("Failed to fetch receipts:", err);
       setError("Could not load financial analytics.");

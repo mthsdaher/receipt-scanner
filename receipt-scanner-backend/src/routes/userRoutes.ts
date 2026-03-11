@@ -11,6 +11,7 @@ import {
 } from "../controllers/userController";
 import { currentUser } from "../middleware/current-user";
 import { requireAuth } from "../middleware/require-auth";
+import { authRateLimiter } from "../middleware/rate-limiters";
 
 const { check } = require("express-validator");
 const router = Router();
@@ -18,6 +19,7 @@ const router = Router();
 // POST /api/users/signup
 router.post(
   "/signup",
+  authRateLimiter,
   [
     check("fullName").notEmpty().withMessage("Full name is required"),
     check("age")
@@ -43,6 +45,7 @@ router.post(
 // POST /api/users/login
 router.post(
   "/login",
+  authRateLimiter,
   [
     check("email").isEmail().withMessage("Valid email is required"),
     check("password").notEmpty().withMessage("Password is required"),
@@ -65,6 +68,7 @@ router.delete(
 // POST /api/users/reset-request
 router.post(
   "/reset-request",
+  authRateLimiter,
   [check("email").isEmail().withMessage("Valid email is required")],
   requestPasswordReset
 );
@@ -72,6 +76,7 @@ router.post(
 // POST /api/users/reset-password
 router.post(
   "/reset-password",
+  authRateLimiter,
   [
     check("email").isEmail().withMessage("Valid email is required"),
     check("newPassword")
@@ -89,12 +94,14 @@ router.post(
 // POST /api/users/resend-code
 router.post(
   "/resend-code",
+  authRateLimiter,
   [check("email").isEmail().withMessage("Valid email is required")],
   resendVerificationCode
 );
 
 router.post(
   "/validate-code",
+  authRateLimiter,
   [
     check("email").isEmail().withMessage("Valid email is required"),
     check("code")

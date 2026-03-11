@@ -9,6 +9,11 @@ import {
   UseHistoryControllerReturn,
 } from "./types";
 
+interface ApiSuccessResponse<T> {
+  status: "success";
+  data: T;
+}
+
 /**
  * History controller:
  * - Reads the JWT from localStorage
@@ -54,11 +59,11 @@ export const useHistoryController = (): UseHistoryControllerReturn => {
     }
 
     try {
-      const data = await apiClient.get<ReceiptHistoryItem[]>(
+      const response = await apiClient.get<ApiSuccessResponse<ReceiptHistoryItem[]>>(
         `/api/receipts/${userId}`,
         signOut
       );
-      setRawReceipts(data);
+      setRawReceipts(response.data);
     } catch (fetchError) {
       console.error("Failed to load receipt history:", fetchError);
       setError("Could not load receipt history. Please try again.");
