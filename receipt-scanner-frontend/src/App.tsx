@@ -11,6 +11,7 @@ import Navbar from './components/Navbar';
 import VerificationCode from "./pages/VerificationCode";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import History from "./pages/History";
 
 const App: React.FC = () => (
   <>
@@ -31,7 +32,7 @@ const App: React.FC = () => (
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/historic" element={<div>Historic Page (To Be Implemented)</div>} />
+        <Route path="/historic" element={<History />} />
         <Route path="/insert-receipt" element={<InsertReceipt />} />
         <Route path="/signout" element={<Signout />} />
       </Routes>
