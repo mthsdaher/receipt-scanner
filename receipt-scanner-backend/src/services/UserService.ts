@@ -13,6 +13,7 @@ import { Password } from "../utils/password";
 import { generateVerificationCode } from "../utils/verificationCode";
 import * as userDb from "../db/users";
 import { env } from "../config/env";
+import { MailService } from "./MailService";
 import {
   ConflictError,
   ForbiddenError,
@@ -39,6 +40,10 @@ export interface LoginResult {
 
 export interface ValidateCodeResult {
   token: string;
+}
+
+export interface RequestPasswordResetResult {
+  resetToken?: string;
 }
 
 export class UserService {
@@ -123,7 +128,7 @@ export class UserService {
    * Generates reset token and persists it. Does NOT log it (security).
    * In production, send the token via email.
    */
-  static async requestPasswordReset(email: string): Promise<void> {
+  static async requestPasswordReset(email: string): Promise<RequestPasswordResetResult> {
     const user = await userDb.findUserByEmail(email);
     if (!user) {
       throw new NotFoundError("User not found");
@@ -140,8 +145,17 @@ export class UserService {
       resetTokenExpires,
     });
 
-    // Security: Never log reset tokens. In production, send via email.
-    // For dev/demo without email, the user must use another mechanism.
+    // Optional SMTP integration (portfolio/demo): send only when configured.
+    if (MailService.isConfigured()) {
+      await MailService.sendPasswordResetEmail(email, resetToken);
+      return {};
+    }
+
+    // Security: Never log reset tokens. Expose token only for local development tests.
+    if (env.NODE_ENV !== "production") {
+      return { resetToken };
+    }
+    return {};
   }
 
   static async passwordReset(

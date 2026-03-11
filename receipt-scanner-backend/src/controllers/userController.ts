@@ -69,10 +69,11 @@ export const requestPasswordReset = asyncHandler(async (req: Request, res: Respo
   requireValid(req);
   const { email } = req.body;
 
-  await UserService.requestPasswordReset(email);
+  const result = await UserService.requestPasswordReset(email);
   res.status(200).json({
     status: "success",
     message: "If the account exists and is active, check your email for reset instructions.",
+    ...result,
   });
 });
 

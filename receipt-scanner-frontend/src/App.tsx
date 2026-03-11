@@ -9,6 +9,8 @@ import Signout from './pages/Signout/Signout';
 import Home from './pages/Home';
 import Navbar from './components/Navbar'; 
 import VerificationCode from "./pages/VerificationCode";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const App: React.FC = () => (
   <>
@@ -26,6 +28,8 @@ const App: React.FC = () => (
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify-code" element={<VerificationCode />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/historic" element={<div>Historic Page (To Be Implemented)</div>} />
         <Route path="/insert-receipt" element={<InsertReceipt />} />

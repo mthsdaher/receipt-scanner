@@ -61,6 +61,10 @@ export const useSigninController = (): UseSigninControllerReturn => {
     }
   };
 
+  const goToForgotPassword = () => {
+    navigate('/forgot-password');
+  };
+
   return {
     email,
     password,
@@ -70,5 +74,6 @@ export const useSigninController = (): UseSigninControllerReturn => {
     handleChange,
     handleSubmit,
     handleResend,
+    goToForgotPassword,
   };
 };

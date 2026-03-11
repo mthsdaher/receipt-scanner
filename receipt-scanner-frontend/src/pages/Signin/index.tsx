@@ -8,6 +8,7 @@ import {
   ErrorText,
   ResendButton,
   InfoText,
+  LinkButton,
 } from './styles';
 import { useSigninController } from './controller';
 
@@ -21,6 +22,7 @@ const Signin: React.FC = () => {
     handleChange,
     handleSubmit,
     handleResend,
+    goToForgotPassword,
   } = useSigninController();
 
   return (
@@ -42,6 +44,9 @@ const Signin: React.FC = () => {
         />
 
         <Button type="button" onClick={handleSubmit}>Login</Button>
+        <LinkButton type="button" onClick={goToForgotPassword}>
+          Forgot password?
+        </LinkButton>
         {error && <ErrorText>{error}</ErrorText>}
 
         {/* show resend only if login failed due to activation */}

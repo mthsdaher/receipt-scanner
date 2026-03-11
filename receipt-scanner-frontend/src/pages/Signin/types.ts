@@ -7,4 +7,5 @@ export interface UseSigninControllerReturn {
   handleChange: (field: 'email' | 'password') => (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSubmit: () => Promise<void>;
   handleResend: () => Promise<void>;
+  goToForgotPassword: () => void;
 }

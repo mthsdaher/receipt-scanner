@@ -288,12 +288,221 @@
           "500": { "description": "Server error" }
         }
       }
-    }
-  },
-  "/api/users/requestPasswordReset": {
+    },
+    "/api/receipts": {
+      "post": {
+        "summary": "Create a new receipt",
+        "description": "Creates a new receipt for the authenticated user using OCR-extracted data.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 123.45,
+                    "description": "Total amount of the receipt."
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2024-01-31",
+                    "description": "Receipt date in ISO format (YYYY-MM-DD)."
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Supermarket ABC",
+                    "description": "Store name or short description of the receipt."
+                  },
+                  "category": {
+                    "type": "string",
+                    "example": "grocery",
+                    "description": "Optional receipt category."
+                  }
+                },
+                "required": ["amount", "date", "description"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Receipt created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "example": "uuid-receipt-id" },
+                    "userId": { "type": "string", "example": "uuid-user-id" },
+                    "amount": { "type": "number", "example": 123.45 },
+                    "date": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-31T00:00:00.000Z"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Supermarket ABC"
+                    },
+                    "category": {
+                      "type": "string",
+                      "example": "grocery"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error (e.g., invalid amount or date)"
+          },
+          "401": {
+            "description": "Unauthorized (missing or invalid JWT)"
+          }
+        }
+      }
+    },
+    "/api/receipts/{userId}": {
+      "get": {
+        "summary": "List receipts for a user",
+        "description": "Returns all receipts for the given user id (must match the authenticated user).",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "uuid-user-id"
+            },
+            "description": "ID of the user whose receipts should be returned."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of receipts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "string" },
+                      "userId": { "type": "string" },
+                      "amount": { "type": "number" },
+                      "date": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "description": { "type": "string" },
+                      "category": { "type": "string" },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (missing or invalid JWT)"
+          },
+          "403": {
+            "description": "Forbidden (trying to access receipts of another user)"
+          }
+        }
+      }
+    },
+    "/api/paddle/ocr": {
+      "post": {
+        "summary": "Upload an image and run OCR",
+        "description": "Uploads a receipt image, forwards it to the PaddleOCR FastAPI service and returns the parsed result.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file of the receipt."
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OCR executed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "store": {
+                      "type": "string",
+                      "example": "Supermarket ABC"
+                    },
+                    "total": {
+                      "type": "number",
+                      "example": 123.45
+                    },
+                    "date": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "2024-01-31"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "File missing"
+          },
+          "500": {
+            "description": "Failed to process image with OCR"
+          }
+        }
+      }
+    },
+  "/api/users/reset-request": {
     "post": {
       "summary": "Request a password reset",
-      "description": "Generates a password reset token for the user (only if activated). Token is logged to the server console for manual use.",
+      "description": "Generates a password reset token for an active user. If SMTP is configured, sends the token by email; otherwise (non-production only) returns resetToken in the API response for local testing.",
       "requestBody": {
         "required": true,
         "content": {
@@ -323,7 +532,12 @@
                   "status": { "type": "string", "example": "success" },
                   "message": {
                     "type": "string",
-                    "example": "Password reset token generated. Check server logs for the token."
+                    "example": "If the account exists and is active, check your email for reset instructions."
+                  },
+                  "resetToken": {
+                    "type": "string",
+                    "example": "f8b0fdd5b6b4f20b6e9f6d1d870f3f31c64573dc1a1ddf8ad8f2251122334455",
+                    "description": "Returned only when SMTP is not configured and NODE_ENV is not production."
                   }
                 }
               }
@@ -364,7 +578,7 @@
       }
     }
   },
-  "/api/users/passwordReset": {
+  "/api/users/reset-password": {
     "post": {
       "summary": "Reset a user's password",
       "description": "Resets the user's password using the provided reset token (only if activated).",
@@ -551,4 +765,5 @@
       "BearerAuth": []
     }
   ]
+}
 }
