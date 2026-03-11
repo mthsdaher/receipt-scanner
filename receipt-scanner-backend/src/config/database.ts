@@ -19,4 +19,13 @@ export const connectDB = async () => {
   }
 };
 
+export const isDatabaseHealthy = async (): Promise<boolean> => {
+  try {
+    await pool.query("SELECT 1");
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export default pool;

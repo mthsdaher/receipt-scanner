@@ -11,6 +11,7 @@ import { apiRateLimiter } from "./middleware/rate-limiters";
 import userRoutes from "./routes/userRoutes";
 import receiptRoutes from "./routes/receiptRoutes";
 import ocrProxy from "./routes/ocrProxy";
+import healthRoutes from "./routes/healthRoutes";
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(require(openapiPath)));
 app.use("/api/users", userRoutes);
 app.use("/api/receipts", receiptRoutes);
 app.use("/api/paddle", ocrProxy);
+app.use("/", healthRoutes);
 
 /** Centralized error handling - must be last */
 app.use(errorHandler);
