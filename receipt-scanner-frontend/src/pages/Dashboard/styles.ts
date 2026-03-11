@@ -21,6 +21,37 @@ export const Section = styled.section`
   margin-top: 1.2rem;
 `;
 
+export const FilterBar = styled.div`
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+`;
+
+export const FilterLabel = styled.span`
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+`;
+
+export const FilterButton = styled.button<{ $active: boolean }>`
+  border: 1px solid ${({ $active }) => ($active ? "#0b666a" : "#cbd5e1")};
+  background: ${({ $active }) => ($active ? "#0b666a" : "#ffffff")};
+  color: ${({ $active }) => ($active ? "#ffffff" : "#334155")};
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 160ms ease;
+
+  &:hover {
+    border-color: #0b666a;
+    color: ${({ $active }) => ($active ? "#ffffff" : "#0b666a")};
+  }
+`;
+
 export const StatsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

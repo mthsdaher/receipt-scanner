@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   Legend,
   Line,
   LineChart,
@@ -22,6 +23,9 @@ import {
   ChartWrapper,
   Container,
   ErrorCard,
+  FilterBar,
+  FilterButton,
+  FilterLabel,
   FullWidthChartCard,
   FullWidthChartWrapper,
   MessageCard,
@@ -40,8 +44,28 @@ const chartPalette = ["#0B666A", "#35A29F", "#7DD3D0", "#99F6E4", "#115E59", "#2
 const currencyFormatter = (value: number): string => `$${Number(value).toFixed(2)}`;
 const tooltipCurrencyFormatter = (value: unknown): string =>
   currencyFormatter(Number(value ?? 0));
+const chartLabelFormatter = (value: unknown): string =>
+  currencyFormatter(Number(value ?? 0));
+const pieLabelFormatter = (entry: { category: string; total: number }): string =>
+  `${entry.category}: ${currencyFormatter(entry.total)}`;
+
+type ChartKey = "overTime" | "monthly" | "category" | "topPurchases";
+
+const chartFilterOptions: { key: ChartKey; label: string }[] = [
+  { key: "overTime", label: "Spending Over Time" },
+  { key: "monthly", label: "Monthly Spending" },
+  { key: "category", label: "By Category" },
+  { key: "topPurchases", label: "Top Purchases" },
+];
 
 const Dashboard: React.FC = () => {
+  const [selectedCharts, setSelectedCharts] = useState<ChartKey[]>([
+    "overTime",
+    "monthly",
+    "category",
+    "topPurchases",
+  ]);
+
   const {
     loading,
     error,
@@ -52,6 +76,29 @@ const Dashboard: React.FC = () => {
     topPurchases,
   } = useDashboardController();
 
+  const chartVisibility = useMemo(
+    () => ({
+      overTime: selectedCharts.includes("overTime"),
+      monthly: selectedCharts.includes("monthly"),
+      category: selectedCharts.includes("category"),
+      topPurchases: selectedCharts.includes("topPurchases"),
+    }),
+    [selectedCharts]
+  );
+
+  const toggleChart = (key: ChartKey) => {
+    setSelectedCharts((current) => {
+      if (current.includes(key)) {
+        return current.filter((item) => item !== key);
+      }
+      return [...current, key];
+    });
+  };
+
+  const showAllCharts = () => {
+    setSelectedCharts(["overTime", "monthly", "category", "topPurchases"]);
+  };
+
   return (
     <Layout>
       <Container>
@@ -59,6 +106,23 @@ const Dashboard: React.FC = () => {
         <Subtitle>
           Track spending patterns, category distribution, and top-value purchases from scanned receipts.
         </Subtitle>
+
+        <FilterBar>
+          <FilterLabel>Visible charts:</FilterLabel>
+          {chartFilterOptions.map((chart) => (
+            <FilterButton
+              key={chart.key}
+              type="button"
+              $active={selectedCharts.includes(chart.key)}
+              onClick={() => toggleChart(chart.key)}
+            >
+              {chart.label}
+            </FilterButton>
+          ))}
+          <FilterButton type="button" $active={selectedCharts.length === 4} onClick={showAllCharts}>
+            Show all
+          </FilterButton>
+        </FilterBar>
 
         <Section>
           <StatsGrid>
@@ -86,7 +150,8 @@ const Dashboard: React.FC = () => {
 
         {!loading && !error && (
           <>
-            <Section>
+            {chartVisibility.overTime && (
+              <Section>
               <ChartCard>
                 <ChartTitle>Spending Over Time</ChartTitle>
                 <ChartWrapper>
@@ -105,14 +170,24 @@ const Dashboard: React.FC = () => {
                         strokeWidth={3}
                         dot={{ r: 3 }}
                         activeDot={{ r: 5 }}
-                      />
+                      >
+                        <LabelList
+                          dataKey="total"
+                          position="top"
+                          fill="#0f172a"
+                          fontSize={11}
+                          formatter={chartLabelFormatter}
+                        />
+                      </Line>
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartWrapper>
               </ChartCard>
-            </Section>
+              </Section>
+            )}
 
-            <Section>
+            {chartVisibility.monthly && (
+              <Section>
               <ChartCard>
                 <ChartTitle>Monthly Spending</ChartTitle>
                 <ChartWrapper>
@@ -123,16 +198,27 @@ const Dashboard: React.FC = () => {
                       <YAxis />
                       <Tooltip formatter={tooltipCurrencyFormatter} />
                       <Legend />
-                      <Bar dataKey="total" name="Monthly spend" fill="#35A29F" radius={[8, 8, 0, 0]} />
+                      <Bar dataKey="total" name="Monthly spend" fill="#35A29F" radius={[8, 8, 0, 0]}>
+                        <LabelList
+                          dataKey="total"
+                          position="insideTop"
+                          fill="#0f172a"
+                          fontSize={11}
+                          formatter={chartLabelFormatter}
+                        />
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartWrapper>
               </ChartCard>
-            </Section>
+              </Section>
+            )}
 
-            <Section>
+            {(chartVisibility.category || chartVisibility.topPurchases) && (
+              <Section>
               <ChartGrid>
-                <ChartCard>
+                {chartVisibility.category && (
+                  <ChartCard>
                   <ChartTitle>Spending by Category</ChartTitle>
                   <ChartWrapper>
                     <ResponsiveContainer width="100%" height="100%">
@@ -146,6 +232,8 @@ const Dashboard: React.FC = () => {
                           outerRadius={100}
                           innerRadius={55}
                           paddingAngle={2}
+                          label={pieLabelFormatter}
+                          labelLine
                         >
                           {categoryDistribution.map((entry, index) => (
                             <Cell
@@ -159,9 +247,11 @@ const Dashboard: React.FC = () => {
                       </PieChart>
                     </ResponsiveContainer>
                   </ChartWrapper>
-                </ChartCard>
+                  </ChartCard>
+                )}
 
-                <ChartCard>
+                {chartVisibility.topPurchases && (
+                  <ChartCard>
                   <ChartTitle>Top Purchases</ChartTitle>
                   <ChartWrapper>
                     <ResponsiveContainer width="100%" height="100%">
@@ -180,13 +270,29 @@ const Dashboard: React.FC = () => {
                         />
                         <Tooltip formatter={tooltipCurrencyFormatter} />
                         <Legend />
-                        <Bar dataKey="total" name="Top value" fill="#0B666A" radius={[0, 8, 8, 0]} />
+                        <Bar dataKey="total" name="Top value" fill="#0B666A" radius={[0, 8, 8, 0]}>
+                          <LabelList
+                            dataKey="total"
+                            position="insideRight"
+                            fill="#ffffff"
+                            fontSize={11}
+                            formatter={chartLabelFormatter}
+                          />
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartWrapper>
-                </ChartCard>
+                  </ChartCard>
+                )}
               </ChartGrid>
-            </Section>
+              </Section>
+            )}
+
+            {selectedCharts.length === 0 && (
+              <MessageCard>
+                No chart selected. Choose at least one chart filter above.
+              </MessageCard>
+            )}
 
             {stats.totalReceipts === 0 && (
               <FullWidthChartCard>
