@@ -6,6 +6,7 @@ import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import { connectDB } from "./config/database";
 import { errorHandler } from "./middleware/errorHandler";
+import logger, { appLogger } from "./middleware/logger";
 import { apiRateLimiter } from "./middleware/rate-limiters";
 import userRoutes from "./routes/userRoutes";
 import receiptRoutes from "./routes/receiptRoutes";
@@ -27,6 +28,7 @@ app.use(helmet());
 // Global payload limits to reduce request amplification abuse.
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+app.use(logger);
 
 // Broad per-IP API rate limit.
 app.use("/api", apiRateLimiter);
@@ -45,10 +47,16 @@ app.use(errorHandler);
 connectDB()
   .then(() => {
     app.listen(env.PORT, () => {
-      console.log(`Server running on port ${env.PORT}`);
-      console.log(`Swagger UI available at /api-docs`);
+      appLogger.info("server_started", {
+        port: env.PORT,
+        nodeEnv: env.NODE_ENV,
+        docsPath: "/api-docs",
+      });
     });
   })
   .catch((err: unknown) => {
-    console.error("Failed to start server:", err);
+    appLogger.error("server_startup_failed", {
+      message: err instanceof Error ? err.message : "Failed to start server",
+      stack: err instanceof Error ? err.stack : undefined,
+    });
   });
