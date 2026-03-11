@@ -18,6 +18,8 @@ import healthRoutes from "./routes/healthRoutes";
 
 const app = express();
 app.disable("x-powered-by");
+const allowedOrigins =
+  env.FRONTEND_URLS.length > 0 ? env.FRONTEND_URLS : [env.FRONTEND_URL];
 
 if (env.TRUST_PROXY) {
   app.set("trust proxy", env.TRUST_PROXY_HOPS);
@@ -25,7 +27,24 @@ if (env.TRUST_PROXY) {
 
 app.use(
   cors({
-    origin: env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      // Allow server-to-server and CLI tools (no Origin header).
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      appLogger.warn("cors_origin_blocked", {
+        origin,
+        allowedOrigins,
+      });
+      callback(null, false);
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })

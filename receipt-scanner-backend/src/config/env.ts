@@ -58,6 +58,16 @@ const parseNonNegativeInteger = (
   return parsed;
 };
 
+const parseStringList = (rawValue: string | undefined): string[] => {
+  if (!rawValue || rawValue.trim() === "") {
+    return [];
+  }
+  return rawValue
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+};
+
 export const env = {
   NODE_ENV: nodeEnv,
   PORT: parsePositiveInteger(process.env.PORT, 3002, "PORT"),
@@ -92,6 +102,7 @@ export const env = {
   DATABASE_URL: process.env.DATABASE_URL as string,
   OCR_SERVICE_URL: process.env.OCR_SERVICE_URL ?? "http://localhost:8000",
   FRONTEND_URL: process.env.FRONTEND_URL ?? "http://localhost:3000",
+  FRONTEND_URLS: parseStringList(process.env.FRONTEND_URLS),
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined,
   SMTP_USER: process.env.SMTP_USER,
