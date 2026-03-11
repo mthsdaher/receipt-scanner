@@ -41,6 +41,23 @@ const parsePositiveInteger = (
   return parsed;
 };
 
+const parseNonNegativeInteger = (
+  rawValue: string | undefined,
+  defaultValue: number,
+  variableName: string
+): number => {
+  if (rawValue === undefined || rawValue.trim() === "") {
+    return defaultValue;
+  }
+
+  const parsed = Number(rawValue);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`${variableName} must be a non-negative integer`);
+  }
+
+  return parsed;
+};
+
 export const env = {
   NODE_ENV: nodeEnv,
   PORT: parsePositiveInteger(process.env.PORT, 3002, "PORT"),
@@ -54,6 +71,17 @@ export const env = {
     process.env.REQUEST_TIMEOUT_MS,
     30000,
     "REQUEST_TIMEOUT_MS"
+  ),
+  DB_POOL_MAX: parsePositiveInteger(process.env.DB_POOL_MAX, 10, "DB_POOL_MAX"),
+  DB_IDLE_TIMEOUT_MS: parseNonNegativeInteger(
+    process.env.DB_IDLE_TIMEOUT_MS,
+    30000,
+    "DB_IDLE_TIMEOUT_MS"
+  ),
+  DB_CONNECTION_TIMEOUT_MS: parsePositiveInteger(
+    process.env.DB_CONNECTION_TIMEOUT_MS,
+    10000,
+    "DB_CONNECTION_TIMEOUT_MS"
   ),
   JWT_SECRET: process.env.JWT_SECRET as string,
   DATABASE_URL: process.env.DATABASE_URL as string,

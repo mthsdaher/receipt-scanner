@@ -3,6 +3,9 @@ import { env } from "./env";
 
 const pool = new Pool({
   connectionString: env.DATABASE_URL,
+  max: env.DB_POOL_MAX,
+  idleTimeoutMillis: env.DB_IDLE_TIMEOUT_MS,
+  connectionTimeoutMillis: env.DB_CONNECTION_TIMEOUT_MS,
 });
 
 export const query = pool.query.bind(pool);
