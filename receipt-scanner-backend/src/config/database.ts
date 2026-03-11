@@ -28,4 +28,8 @@ export const isDatabaseHealthy = async (): Promise<boolean> => {
   }
 };
 
+export const closeDB = async (): Promise<void> => {
+  await pool.end();
+};
+
 export default pool;
