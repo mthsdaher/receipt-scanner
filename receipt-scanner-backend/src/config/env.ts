@@ -27,6 +27,8 @@ for (const variableName of requiredEnvVars) {
 export const env = {
   NODE_ENV: nodeEnv,
   PORT: Number(process.env.PORT ?? 3002),
+  TRUST_PROXY: process.env.TRUST_PROXY === "true",
+  TRUST_PROXY_HOPS: Number(process.env.TRUST_PROXY_HOPS ?? 1),
   JWT_SECRET: process.env.JWT_SECRET as string,
   DATABASE_URL: process.env.DATABASE_URL as string,
   OCR_SERVICE_URL: process.env.OCR_SERVICE_URL ?? "http://localhost:8000",

@@ -6,6 +6,7 @@ import cors from "cors";
 import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import { closeDB, connectDB } from "./config/database";
+import { NotFoundError } from "./errors/AppError";
 import { errorHandler } from "./middleware/errorHandler";
 import logger, { appLogger } from "./middleware/logger";
 import { apiRateLimiter } from "./middleware/rate-limiters";
@@ -15,6 +16,11 @@ import ocrProxy from "./routes/ocrProxy";
 import healthRoutes from "./routes/healthRoutes";
 
 const app = express();
+app.disable("x-powered-by");
+
+if (env.TRUST_PROXY) {
+  app.set("trust proxy", env.TRUST_PROXY_HOPS);
+}
 
 app.use(
   cors({
@@ -43,6 +49,10 @@ app.use("/api/users", userRoutes);
 app.use("/api/receipts", receiptRoutes);
 app.use("/api/paddle", ocrProxy);
 app.use("/", healthRoutes);
+
+app.use((_req, _res, next) => {
+  next(new NotFoundError("Route not found"));
+});
 
 /** Centralized error handling - must be last */
 app.use(errorHandler);
