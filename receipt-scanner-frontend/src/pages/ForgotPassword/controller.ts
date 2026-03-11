@@ -3,6 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { apiClient } from "services/apiClient";
 import { UseForgotPasswordControllerReturn } from "./types";
 
+interface ApiSuccessResponse<T> {
+  status: "success";
+  message?: string;
+  data: T;
+}
+
 export const useForgotPasswordController = (): UseForgotPasswordControllerReturn => {
   const [email, setEmail] = useState("");
   const [resetToken, setResetToken] = useState("");
@@ -20,13 +26,13 @@ export const useForgotPasswordController = (): UseForgotPasswordControllerReturn
     setResetToken("");
 
     try {
-      const data = await apiClient.post<{ message: string; resetToken?: string }>(
+      const response = await apiClient.post<ApiSuccessResponse<{ resetToken?: string }>>(
         "/api/users/reset-request",
         { email }
       );
-      setSuccessMessage(data.message ?? "Reset instructions generated successfully.");
-      if (data.resetToken) {
-        setResetToken(data.resetToken);
+      setSuccessMessage(response.message ?? "Reset instructions generated successfully.");
+      if (response.data.resetToken) {
+        setResetToken(response.data.resetToken);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to request password reset.");

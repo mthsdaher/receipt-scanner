@@ -140,27 +140,33 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "user": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
                       "type": "object",
                       "properties": {
-                        "fullName": {
-                          "type": "string",
-                          "example": "Simple User"
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "fullName": {
+                              "type": "string",
+                              "example": "Simple User"
+                            },
+                            "age": { "type": "number", "example": 25 },
+                            "email": {
+                              "type": "string",
+                              "example": "simpleuser@example.com"
+                            },
+                            "cellNumber": {
+                              "type": "string",
+                              "example": "+551111111111"
+                            }
+                          }
                         },
-                        "age": { "type": "number", "example": 25 },
-                        "email": {
+                        "token": {
                           "type": "string",
-                          "example": "simpleuser@example.com"
-                        },
-                        "cellNumber": {
-                          "type": "string",
-                          "example": "+551111111111"
+                          "example": "your-jwt-token-here"
                         }
                       }
-                    },
-                    "token": {
-                      "type": "string",
-                      "example": "your-jwt-token-here"
                     }
                   }
                 }
@@ -219,24 +225,30 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "fullName": {
-                        "type": "string",
-                        "example": "Simple User"
-                      },
-                      "age": { "type": "number", "example": 25 },
-                      "email": {
-                        "type": "string",
-                        "example": "simpleuser@example.com"
-                      },
-                      "cellNumber": {
-                        "type": "string",
-                        "example": "+551111111111"
-                      },
-                      "status": { "type": "string", "example": "Active" }
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fullName": {
+                            "type": "string",
+                            "example": "Simple User"
+                          },
+                          "age": { "type": "number", "example": 25 },
+                          "email": {
+                            "type": "string",
+                            "example": "simpleuser@example.com"
+                          },
+                          "cellNumber": {
+                            "type": "string",
+                            "example": "+551111111111"
+                          },
+                          "status": { "type": "string", "example": "Active" }
+                        }
+                      }
                     }
                   }
                 }
@@ -267,6 +279,11 @@
       "delete": {
         "summary": "Delete a user by email",
         "description": "Deletes any user (independent of status) by their email",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -282,8 +299,23 @@
           }
         },
         "responses": {
-          "200": { "description": "User deleted successfully" },
+          "200": {
+            "description": "User deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "message": { "type": "string", "example": "User deleted successfully" },
+                    "data": { "type": "null", "example": null }
+                  }
+                }
+              }
+            }
+          },
           "400": { "description": "Email is required" },
+          "401": { "description": "Unauthorized (missing or invalid JWT)" },
           "404": { "description": "User not found" },
           "500": { "description": "Server error" }
         }
@@ -487,20 +519,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                    "type": "object",
-                    "properties": {
-                      "store": {
-                        "type": "string",
-                        "example": "Supermarket ABC"
-                      },
-                      "total": {
-                        "type": "number",
-                        "example": 123.45
-                      },
-                      "date": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2024-01-31"
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "store": {
+                          "type": "string",
+                          "example": "Supermarket ABC"
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 123.45
+                        },
+                        "date": {
+                          "type": "string",
+                          "format": "date",
+                          "example": "2024-01-31"
+                        }
                       }
                     }
                   }
@@ -564,10 +601,15 @@
                     "type": "string",
                     "example": "If the account exists and is active, check your email for reset instructions."
                   },
-                  "resetToken": {
-                    "type": "string",
-                    "example": "f8b0fdd5b6b4f20b6e9f6d1d870f3f31c64573dc1a1ddf8ad8f2251122334455",
-                    "description": "Returned only when SMTP is not configured and NODE_ENV is not production."
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "resetToken": {
+                        "type": "string",
+                        "example": "f8b0fdd5b6b4f20b6e9f6d1d870f3f31c64573dc1a1ddf8ad8f2251122334455",
+                        "description": "Returned only when SMTP is not configured and NODE_ENV is not production."
+                      }
+                    }
                   }
                 }
               }
@@ -647,7 +689,8 @@
                   "message": {
                     "type": "string",
                     "example": "Password reset successfully"
-                  }
+                  },
+                  "data": { "type": "null", "example": null }
                 }
               }
             }
@@ -704,6 +747,59 @@
       }
     }
   },
+  "/api/users/resend-code": {
+    "post": {
+      "summary": "Resend verification code",
+      "description": "Regenerates and resends an account verification code for users not yet activated.",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "simpleuser@example.com"
+                }
+              },
+              "required": ["email"]
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Verification code resent",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "example": "success" },
+                  "message": { "type": "string", "example": "Verification code resent." },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "verificationCode": {
+                        "type": "string",
+                        "example": "123456",
+                        "description": "Returned only when email delivery is not configured."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": { "description": "Invalid request payload" },
+        "404": { "description": "User not found" },
+        "429": { "description": "Too many requests" }
+      }
+    }
+  },
   "/api/users/validate-code": {
     "post": {
       "summary": "Manually validate a user",
@@ -720,7 +816,7 @@
                   "format": "email",
                   "example": "simpleuser@example.com"
                 },
-                "code": { "type": "string", "example": "1234" }
+                "code": { "type": "string", "example": "123456" }
               },
               "required": ["email", "code"]
             }
@@ -738,11 +834,16 @@
                   "status": { "type": "string", "example": "success" },
                   "message": {
                     "type": "string",
-                    "example": "Code validated. Account activated."
+                    "example": "Account activated"
                   },
-                  "token": {
-                    "type": "string",
-                    "example": "your-jwt-token-here"
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "token": {
+                        "type": "string",
+                        "example": "your-jwt-token-here"
+                      }
+                    }
                   }
                 }
               }
@@ -779,6 +880,7 @@
         }
       }
     }
+  }
   },
   "components": {
     "securitySchemes": {

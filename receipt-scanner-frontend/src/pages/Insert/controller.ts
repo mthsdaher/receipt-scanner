@@ -4,6 +4,11 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAuthUserId } from "../../hooks/useAuthUserId";
 import { apiClient } from "../../services/apiClient";
 
+interface ApiSuccessResponse<T> {
+  status: "success";
+  data: T;
+}
+
 interface ReceiptFormData {
   store: string;
   total: string;
@@ -43,7 +48,7 @@ export const useInsertReceiptController = () => {
       setError("");
     };
 
-  // Upload image to backend — receives { store, total, date } directly.
+  // Upload image to backend — receives { status, data: { store, total, date } }.
   // Users can still edit these values before saving.
   const handleUpload = async () => {
     if (!file) return;
@@ -55,11 +60,12 @@ export const useInsertReceiptController = () => {
     setSaved(false);
 
     try {
-      const data = await apiClient.postForm<ParsedReceipt>(
+      const response = await apiClient.postForm<ApiSuccessResponse<ParsedReceipt>>(
         "/api/paddle/ocr",
         formData,
         signOut
       );
+      const data = response.data;
 
       setReceiptForm({
         store: data.store ?? "",

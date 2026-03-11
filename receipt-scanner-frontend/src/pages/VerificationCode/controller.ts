@@ -4,6 +4,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { UseVerificationControllerReturn } from './types';
 import { apiClient } from 'services/apiClient';
 
+interface ApiSuccessResponse<T> {
+  status: 'success';
+  data: T;
+}
+
 export const useVerificationController = (): UseVerificationControllerReturn => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,9 +46,12 @@ export const useVerificationController = (): UseVerificationControllerReturn => 
   const handleResend = async () => {
     setVerifyError('');
     try {
-      const data = await apiClient.post<{ verificationCode?: string }>('/api/users/resend-code', { email });
+      const response = await apiClient.post<ApiSuccessResponse<{ verificationCode?: string }>>(
+        '/api/users/resend-code',
+        { email }
+      );
       setTimer(300);
-      if (data.verificationCode) setCodeInput(data.verificationCode);
+      if (response.data.verificationCode) setCodeInput(response.data.verificationCode);
     } catch (err) {
       setVerifyError(err instanceof Error ? err.message : 'Something went wrong');
     }
@@ -53,11 +61,11 @@ export const useVerificationController = (): UseVerificationControllerReturn => 
     setVerifyError('');
     setIsVerifying(true);
     try {
-      const data = await apiClient.post<{ token: string }>('/api/users/validate-code', {
+      const response = await apiClient.post<ApiSuccessResponse<{ token: string }>>('/api/users/validate-code', {
         email,
         code: codeInput,
       });
-      signIn(data.token);
+      signIn(response.data.token);
       navigate('/', { replace: true });
     } catch (err) {
       setVerifyError(err instanceof Error ? err.message : 'Invalid code');

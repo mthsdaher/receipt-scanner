@@ -4,6 +4,11 @@ import { UseSigninControllerReturn } from './types';
 import { useAuth } from 'contexts/AuthContext';
 import { apiClient } from 'services/apiClient';
 
+interface ApiSuccessResponse<T> {
+  status: 'success';
+  data: T;
+}
+
 export const useSigninController = (): UseSigninControllerReturn => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,8 +45,11 @@ export const useSigninController = (): UseSigninControllerReturn => {
   const handleSubmit = async () => {
     setError('');
     try {
-      const data = await apiClient.post<{ token: string }>('/api/users/login', { email, password });
-      signIn(data.token);
+      const response = await apiClient.post<ApiSuccessResponse<{ token: string }>>('/api/users/login', {
+        email,
+        password,
+      });
+      signIn(response.data.token);
       navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong while trying to sign in.');

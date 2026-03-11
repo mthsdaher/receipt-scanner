@@ -35,7 +35,7 @@ export const signup = asyncHandler(async (req: Request, res: Response): Promise<
   res.status(201).json({
     status: "success",
     message: "User created. Use the code to activate your account.",
-    ...result,
+    data: result,
   });
 });
 
@@ -47,14 +47,16 @@ export const login = asyncHandler(async (req: Request, res: Response): Promise<v
 
   res.json({
     status: "success",
-    user: result.user,
-    token: result.token,
+    data: {
+      user: result.user,
+      token: result.token,
+    },
   });
 });
 
 export const getUsers = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
   const users = await UserService.getUsers();
-  res.json({ status: "success", users });
+  res.json({ status: "success", data: users });
 });
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
@@ -62,7 +64,7 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response): Prom
   const { email } = req.body;
 
   await UserService.deleteUser(email);
-  res.status(200).json({ status: "success", message: "User deleted successfully" });
+  res.status(200).json({ status: "success", message: "User deleted successfully", data: null });
 });
 
 export const requestPasswordReset = asyncHandler(async (req: Request, res: Response): Promise<void> => {
@@ -73,7 +75,7 @@ export const requestPasswordReset = asyncHandler(async (req: Request, res: Respo
   res.status(200).json({
     status: "success",
     message: "If the account exists and is active, check your email for reset instructions.",
-    ...result,
+    data: result,
   });
 });
 
@@ -82,7 +84,7 @@ export const passwordReset = asyncHandler(async (req: Request, res: Response): P
   const { email, newPassword, resetToken } = req.body;
 
   await UserService.passwordReset(email, newPassword, resetToken);
-  res.status(200).json({ status: "success", message: "Password reset successfully" });
+  res.status(200).json({ status: "success", message: "Password reset successfully", data: null });
 });
 
 export const resendVerificationCode = asyncHandler(async (req: Request, res: Response): Promise<void> => {
@@ -93,7 +95,7 @@ export const resendVerificationCode = asyncHandler(async (req: Request, res: Res
   res.status(200).json({
     status: "success",
     message: "Verification code resent.",
-    ...result,
+    data: result,
   });
 });
 
@@ -105,6 +107,6 @@ export const validateCode = asyncHandler(async (req: Request, res: Response): Pr
   res.status(200).json({
     status: "success",
     message: "Account activated",
-    token,
+    data: { token },
   });
 });

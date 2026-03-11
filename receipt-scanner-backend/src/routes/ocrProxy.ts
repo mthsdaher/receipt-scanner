@@ -88,7 +88,10 @@ router.post("/ocr", currentUser, requireAuth, ocrRateLimiter, handleUpload, asyn
     });
 
     cleanupFile(filePath);
-    res.json(response.data);
+    res.json({
+      status: "success",
+      data: response.data,
+    });
   } catch (error) {
     cleanupFile(filePath);
     res.status(500).json({ status: "error", message: "Failed to OCR image" });
