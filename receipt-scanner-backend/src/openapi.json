@@ -57,25 +57,30 @@
                       "type": "string",
                       "example": "User created. Manually verify the user by setting status to 'Active' in the database or via API (e.g., validateCode endpoint)."
                     },
-                    "user": {
+                    "data": {
                       "type": "object",
                       "properties": {
-                        "fullName": {
-                          "type": "string",
-                          "example": "Simple User"
-                        },
-                        "age": { "type": "number", "example": 25 },
-                        "email": {
-                          "type": "string",
-                          "example": "simpleuser@example.com"
-                        },
-                        "cellNumber": {
-                          "type": "string",
-                          "example": "+551111111111"
-                        },
-                        "verificationCode": {
-                          "type": "string",
-                          "example": "123456"
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "fullName": {
+                              "type": "string",
+                              "example": "Simple User"
+                            },
+                            "age": { "type": "number", "example": 25 },
+                            "email": {
+                              "type": "string",
+                              "example": "simpleuser@example.com"
+                            },
+                            "cellNumber": {
+                              "type": "string",
+                              "example": "+551111111111"
+                            },
+                            "verificationCode": {
+                              "type": "string",
+                              "example": "123456"
+                            }
+                          }
                         }
                       }
                     }
@@ -92,6 +97,7 @@
                   "type": "object",
                   "properties": {
                     "status": { "type": "string", "example": "error" },
+                    "code": { "type": "string", "example": "VALIDATION_ERROR" },
                     "errors": {
                       "type": "array",
                       "items": { "type": "object" },
@@ -100,7 +106,8 @@
                     "message": {
                       "type": "string",
                       "example": "Email already registered"
-                    }
+                    },
+                    "requestId": { "type": "string", "example": "d5015d7d-9ee5-43ab-8f34-5e5c31cbe340" }
                   }
                 }
               }
@@ -413,6 +420,9 @@
           },
           "401": {
             "description": "Unauthorized (missing or invalid JWT)"
+          },
+          "429": {
+            "description": "Too many receipt write requests"
           }
         }
       }
@@ -482,6 +492,56 @@
           },
           "403": {
             "description": "Forbidden (trying to access receipts of another user)"
+          },
+          "429": {
+            "description": "Too many receipt read requests"
+          }
+        }
+      }
+    },
+    "/api/receipts/scan": {
+      "post": {
+        "summary": "Run simulated receipt scan",
+        "description": "Returns a simulated OCR payload. Requires authentication and is rate limited as a write operation.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Simulated scan response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "seller": { "type": "string", "example": "Example Store" },
+                        "date": { "type": "string", "example": "2023-10-25" },
+                        "items": {
+                          "type": "array",
+                          "items": { "type": "string" },
+                          "example": ["Item 1", "Item 2"]
+                        },
+                        "value": { "type": "number", "example": 100 },
+                        "taxes": { "type": "number", "example": 10 },
+                        "totalValue": { "type": "number", "example": 110 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (missing or invalid JWT)"
+          },
+          "429": {
+            "description": "Too many receipt write requests"
           }
         }
       }
