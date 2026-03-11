@@ -523,6 +523,7 @@
             "required": true,
             "schema": {
               "type": "string",
+              "format": "uuid",
               "example": "uuid-user-id"
             },
             "description": "ID of the user whose receipts should be returned."
@@ -569,6 +570,9 @@
           },
           "401": {
             "description": "Unauthorized (missing or invalid JWT)"
+          },
+          "400": {
+            "description": "Invalid path parameter (e.g., malformed userId)"
           },
           "403": {
             "description": "Forbidden (trying to access receipts of another user)"

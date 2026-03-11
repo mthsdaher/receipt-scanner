@@ -41,6 +41,11 @@ const createReceipt = asyncHandler(async (req: Request, res: Response): Promise<
 });
 
 const getUserReceipts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw errors;
+  }
+
   const currentUser = req.currentUser;
   const requestedUserId = req.params.userId;
 

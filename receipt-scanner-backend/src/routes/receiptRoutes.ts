@@ -6,7 +6,7 @@ import {
   receiptReadRateLimiter,
   receiptWriteRateLimiter,
 } from '../middleware/rate-limiters';
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 
 const router = Router();
 
@@ -17,16 +17,32 @@ router.post(
   requireAuth,
   receiptWriteRateLimiter,
   [
-    body('amount').isFloat({ min: 0 }).withMessage('Amount must be a positive number'),
-    body('date').isISO8601().withMessage('Date must be in ISO format'),
-    body('description').notEmpty().withMessage('Description is required').trim(),
-    body('category').optional().trim(),
+    body('amount').isFloat({ min: 0 }).withMessage('Amount must be a non-negative number'),
+    body('date').isISO8601({ strict: true }).withMessage('Date must be in ISO format'),
+    body('description')
+      .notEmpty()
+      .withMessage('Description is required')
+      .trim()
+      .isLength({ max: 255 })
+      .withMessage('Description must be at most 255 characters'),
+    body('category')
+      .optional()
+      .trim()
+      .isLength({ max: 80 })
+      .withMessage('Category must be at most 80 characters'),
   ],
   createReceipt
 );
 
 // GET /api/receipts/:userId - List all receipts for a user
-router.get('/:userId', currentUser, requireAuth, receiptReadRateLimiter, getUserReceipts);
+router.get(
+  '/:userId',
+  currentUser,
+  requireAuth,
+  receiptReadRateLimiter,
+  [param('userId').isUUID().withMessage('userId must be a valid UUID')],
+  getUserReceipts
+);
 
 // Simulated OCR scan
 router.post('/scan', currentUser, requireAuth, receiptWriteRateLimiter, scanReceipt);
