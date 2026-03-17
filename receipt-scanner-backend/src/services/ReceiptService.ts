@@ -1,6 +1,9 @@
 import * as receiptDb from "../db/receipts";
+import * as receiptEmbeddingsDb from "../db/receiptEmbeddings";
 import * as userDb from "../db/users";
 import { BadRequestError, ForbiddenError, NotFoundError } from "../errors/AppError";
+import { env } from "../config/env";
+import { generateEmbedding, receiptToEmbeddableText } from "./EmbeddingService";
 
 /**
  * ReceiptService: business logic for receipts.
@@ -54,13 +57,33 @@ export const ReceiptService = {
       throw new BadRequestError("Description is required");
     }
 
-    return receiptDb.createReceipt({
+    const receipt = await receiptDb.createReceipt({
       userId: input.userId,
       amount: normalizeAmount(input.amount),
       date: normalizeDate(input.date),
       description,
       category: normalizeCategory(input.category),
     });
+
+    // Background: generate and store embedding for RAG (non-blocking)
+    if (env.OPENAI_API_KEY?.trim()) {
+      void (async () => {
+        try {
+          const text = receiptToEmbeddableText({
+            description: receipt.description,
+            category: receipt.category,
+            amount: receipt.amount,
+            date: receipt.date,
+          });
+          const embedding = await generateEmbedding(text);
+          await receiptEmbeddingsDb.updateReceiptEmbedding(receipt.id, embedding);
+        } catch (err) {
+          console.warn("[ReceiptService] Embedding skipped:", (err as Error).message);
+        }
+      })();
+    }
+
+    return receipt;
   },
 
   async findByUserId(userId: string) {

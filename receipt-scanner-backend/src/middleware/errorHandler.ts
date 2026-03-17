@@ -5,6 +5,7 @@ import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
+  ServiceUnavailableError,
   UnauthorizedError,
 } from "../errors/AppError";
 import { env } from "../config/env";
@@ -16,6 +17,7 @@ const getAppErrorCode = (error: AppError): string => {
   if (error instanceof ForbiddenError) return "FORBIDDEN";
   if (error instanceof NotFoundError) return "NOT_FOUND";
   if (error instanceof ConflictError) return "CONFLICT";
+  if (error instanceof ServiceUnavailableError) return "SERVICE_UNAVAILABLE";
   return "APP_ERROR";
 };
 

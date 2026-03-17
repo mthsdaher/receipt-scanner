@@ -9,6 +9,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import logger, { appLogger } from "./middleware/logger";
 import { requestTimeout } from "./middleware/request-timeout";
 import { apiRateLimiter } from "./middleware/rate-limiters";
+import aiRoutes from "./routes/aiRoutes";
 import authRoutes from "./routes/authRoutes";
 import healthRoutes from "./routes/healthRoutes";
 import ocrProxy from "./routes/ocrProxy";
@@ -55,6 +56,7 @@ const openapiPath = path.resolve(__dirname, "openapi.json");
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(require(openapiPath)));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/ai", aiRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/receipts", receiptRoutes);
 app.use("/api/paddle", ocrProxy);
