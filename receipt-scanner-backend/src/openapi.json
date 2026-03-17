@@ -485,6 +485,18 @@
                     "type": "string",
                     "example": "grocery",
                     "description": "Optional receipt category. Stored normalized in lowercase; defaults to uncategorized when omitted."
+                  },
+                  "subtotal": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 100.00,
+                    "description": "Optional pre-tax subtotal. When both subtotal and tax are provided, validates that subtotal + tax = amount."
+                  },
+                  "tax": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 10.00,
+                    "description": "Optional tax amount in currency. When both subtotal and tax are provided, validates that subtotal + tax = amount."
                   }
                 },
                 "required": ["amount", "date", "description"]
@@ -520,6 +532,16 @@
                           "type": "string",
                           "example": "grocery"
                         },
+                        "subtotal": { "type": "number", "example": 100.00, "description": "Pre-tax subtotal when provided" },
+                        "tax": { "type": "number", "example": 10.00, "description": "Tax amount when provided" },
+                        "validationStatus": {
+                          "type": "string",
+                          "enum": ["valid", "invalid", "not_validated"],
+                          "example": "valid",
+                          "description": "Financial validation: valid (subtotal+tax=total), invalid (rejected), not_validated (no breakdown)"
+                        },
+                        "validationReason": { "type": "string", "nullable": true, "description": "Reason when validationStatus is invalid" },
+                        "categorizationReasoning": { "type": "string", "nullable": true, "description": "AI explanation for category when auto-categorized" },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time"
@@ -536,7 +558,7 @@
             }
           },
           "400": {
-            "description": "Validation error (e.g., invalid amount or date)"
+            "description": "Validation error (e.g., invalid amount, date, or inconsistent totals: subtotal + tax != amount)"
           },
           "401": {
             "description": "Unauthorized (missing or invalid JWT)"
@@ -592,6 +614,11 @@
                           },
                           "description": { "type": "string" },
                           "category": { "type": "string" },
+                          "subtotal": { "type": "number" },
+                          "tax": { "type": "number" },
+                          "validationStatus": { "type": "string", "enum": ["valid", "invalid", "not_validated"] },
+                          "validationReason": { "type": "string", "nullable": true },
+                          "categorizationReasoning": { "type": "string", "nullable": true },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time"
@@ -756,6 +783,166 @@
           "500": {
             "description": "Failed to process image with OCR"
           }
+        }
+      }
+    },
+    "/api/ai/health": {
+      "get": {
+        "summary": "Check AI features availability",
+        "description": "Returns OpenAI and pgvector status. No authentication required. Use to check if RAG and agent chat are available.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "AI status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "openai": { "type": "string", "example": "configured", "description": "configured | missing" },
+                        "pgvector": { "type": "string", "example": "available", "description": "available | unavailable" },
+                        "aiReady": { "type": "boolean", "example": true, "description": "true when both OpenAI and pgvector are ready" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai/query": {
+      "post": {
+        "summary": "RAG query over receipts",
+        "description": "Ask a natural-language question about your receipts. Uses semantic search (embeddings) + LLM to answer.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "question": {
+                    "type": "string",
+                    "example": "What were my biggest expenses last month?",
+                    "description": "Natural-language question about your receipts"
+                  }
+                },
+                "required": ["question"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Answer with sources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "answer": { "type": "string", "example": "Based on your receipts, your biggest expenses were..." },
+                        "sourcesCount": { "type": "number", "example": 5, "description": "Number of receipts used as context" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized (missing or invalid JWT)" },
+          "503": {
+            "description": "AI not configured (OPENAI_API_KEY or pgvector missing)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "code": { "type": "string", "example": "SERVICE_UNAVAILABLE" },
+                    "message": { "type": "string", "example": "AI features are not available" }
+                  }
+                }
+              }
+            }
+          },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/api/ai/chat": {
+      "post": {
+        "summary": "Agentic chat",
+        "description": "Chat with an AI agent that can list receipts, add receipts, and search semantically. Uses tools: get_receipts, add_receipt, search_receipts.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "example": "List my receipts from this month and add one for $50 at Office Depot",
+                    "description": "Natural-language message to the agent"
+                  }
+                },
+                "required": ["message"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agent response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "response": {
+                          "type": "string",
+                          "example": "Here are your receipts from this month... I've added the Office Depot receipt."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized (missing or invalid JWT)" },
+          "503": {
+            "description": "AI not configured (OPENAI_API_KEY or pgvector missing)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "code": { "type": "string", "example": "SERVICE_UNAVAILABLE" },
+                    "message": { "type": "string", "example": "AI features are not available" }
+                  }
+                }
+              }
+            }
+          },
+          "429": { "description": "Too many requests" }
         }
       }
     },
