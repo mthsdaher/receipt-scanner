@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SignupFormFields, SignupControllerReturn } from "./types";
 import { apiClient } from "services/apiClient";
+import { frontendEnv } from "config/env";
 
 interface ApiSuccessResponse<T> {
   status: "success";
@@ -60,5 +61,6 @@ export const useSignupController = (): SignupControllerReturn => {
     error,
     handleChange,
     handleSubmit,
+    googleSignUpUrl: `${frontendEnv.API_URL}/api/auth/google`,
   };
 };

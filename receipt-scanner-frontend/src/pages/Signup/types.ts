@@ -20,4 +20,5 @@ export interface SignupControllerReturn {
     field: keyof SignupFormFields
   ) => (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSubmit: () => Promise<void>;
+  googleSignUpUrl: string;
 }
