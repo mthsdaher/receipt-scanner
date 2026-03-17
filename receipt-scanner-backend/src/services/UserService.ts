@@ -212,6 +212,27 @@ export class UserService {
     return {};
   }
 
+  static async loginOrCreateWithGoogle(googleEmail: string, googleName: string): Promise<{ token: string }> {
+    let user = await userDb.findUserByEmail(googleEmail);
+    if (!user) {
+      const randomPassword = await Password.toHash(crypto.randomBytes(32).toString("hex"));
+      user = await userDb.createOAuthUser({
+        fullName: googleName || "Google User",
+        email: googleEmail,
+        password: randomPassword,
+      });
+    }
+    if (user.status !== UserStatus.Active) {
+      await userDb.updateUser(googleEmail, { status: UserStatus.Active });
+    }
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    return { token };
+  }
+
   static async validateCode(email: string, code: string): Promise<ValidateCodeResult> {
     const user = await userDb.findUserByEmail(email, true);
     if (!user) {

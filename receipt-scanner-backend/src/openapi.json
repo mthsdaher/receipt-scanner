@@ -196,6 +196,46 @@
         }
       }
     },
+    "/api/auth/google": {
+      "get": {
+        "summary": "Initiate Google OAuth sign-in",
+        "description": "Redirects the user to Google's consent screen. After authentication, Google redirects to /api/auth/google/callback. The callback exchanges the code for tokens, finds or creates the user, and redirects to the frontend with ?token=JWT.",
+        "security": [],
+        "responses": {
+          "302": {
+            "description": "Redirect to Google OAuth consent or to frontend with error if OAuth is not configured"
+          }
+        }
+      }
+    },
+    "/api/auth/google/callback": {
+      "get": {
+        "summary": "Google OAuth callback",
+        "description": "Handles the redirect from Google after user consent. Exchanges the authorization code for tokens, verifies the ID token, finds or creates the user, and redirects to the frontend with ?token=JWT or ?error=...",
+        "security": [],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Authorization code from Google (present on success)"
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Error from Google (present when user denies or error occurs)"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to frontend /signin with token or error query parameter"
+          }
+        }
+      }
+    },
     "/api/users/login": {
       "post": {
         "summary": "Login an existing user",

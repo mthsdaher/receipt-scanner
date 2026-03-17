@@ -74,6 +74,52 @@ export const Button = styled.button`
   }
 `;
 
+export const GoogleButton = styled.a`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem;
+  margin-bottom: 1rem;
+  background: #fff;
+  color: #333;
+  font-weight: 600;
+  border: 1px solid #cfd8dc;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: #0b666a;
+    box-shadow: 0 0 0 2px rgba(11, 102, 106, 0.15);
+  }
+`;
+
+export const Divider = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+  color: #666;
+  font-size: 0.9rem;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #cfd8dc;
+  }
+  &::before {
+    margin-right: 0.75rem;
+  }
+  &::after {
+    margin-left: 0.75rem;
+  }
+`;
+
 export const ErrorText = styled.p`
   color: red;
   margin-top: 1rem;

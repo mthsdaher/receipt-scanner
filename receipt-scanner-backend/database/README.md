@@ -6,9 +6,10 @@
    - No DBeaver: botão direito em PostgreSQL → Create Database
    - Nome: `receipt_scanner` (ou outro de sua preferência)
 
-2. **Executar a migração**
-   - Abra o arquivo `migrations/001_initial_schema.sql`
-   - Execute o script no banco criado (Execute SQL Script ou Ctrl+Enter em cada bloco)
+2. **Executar as migrações** (em ordem)
+   - `migrations/001_initial_schema.sql` — schema inicial
+   - `migrations/002_add_embeddings.sql` — colunas para AI (embeddings, explainability)
+   - **Nota:** A migração 002 requer a extensão [pgvector](https://github.com/pgvector/pgvector#installation) no PostgreSQL
 
 3. **Configurar a connection string no `.env.development`**
    ```

@@ -5,6 +5,8 @@ import {
   Title,
   Input,
   Button,
+  GoogleButton,
+  Divider,
   ErrorText,
   ResendButton,
   InfoText,
@@ -23,12 +25,19 @@ const Signin: React.FC = () => {
     handleSubmit,
     handleResend,
     goToForgotPassword,
+    googleSignInUrl,
   } = useSigninController();
 
   return (
     <Layout>
       <Container>
         <Title>Sign In</Title>
+
+        <GoogleButton as="a" href={googleSignInUrl}>
+          Sign in with Google
+        </GoogleButton>
+
+        <Divider>or</Divider>
 
         <Input
           type="email"

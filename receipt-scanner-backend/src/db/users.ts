@@ -108,6 +108,20 @@ export async function createUser(data: {
   return rowToUser(res.rows[0]);
 }
 
+export async function createOAuthUser(data: {
+  fullName: string;
+  email: string;
+  password: string;
+}) {
+  const res = await pool.query<UserRow>(
+    `INSERT INTO users (full_name, age, email, cell_number, password, verif_cd, exp_dt, status)
+     VALUES ($1, 0, LOWER($2), 'oauth', $3, NULL, NULL, 'Active')
+     RETURNING *`,
+    [data.fullName.trim(), data.email.trim(), data.password]
+  );
+  return rowToUser(res.rows[0]);
+}
+
 export async function updateUser(
   email: string,
   updates: Partial<{

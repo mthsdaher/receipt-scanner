@@ -8,4 +8,5 @@ export interface UseSigninControllerReturn {
   handleSubmit: () => Promise<void>;
   handleResend: () => Promise<void>;
   goToForgotPassword: () => void;
+  googleSignInUrl: string;
 }

@@ -109,5 +109,10 @@ export const env = {
   SMTP_PASS: process.env.SMTP_PASS,
   SMTP_FROM: process.env.SMTP_FROM,
   SMTP_SECURE: process.env.SMTP_SECURE === "true",
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? "",
+  BACKEND_PUBLIC_URL: process.env.BACKEND_PUBLIC_URL ?? "http://localhost:3002",
+  /** OpenAI API key for AI features (RAG, embeddings, agentic). Optional at startup; required when calling AI endpoints. */
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "",
 } as const;
 

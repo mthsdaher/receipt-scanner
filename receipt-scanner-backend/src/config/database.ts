@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import pgvector from "pgvector/pg";
 import { env } from "./env";
 
 const pool = new Pool({
@@ -8,12 +9,25 @@ const pool = new Pool({
   connectionTimeoutMillis: env.DB_CONNECTION_TIMEOUT_MS,
 });
 
+// Register pgvector types for each new connection (required for vector columns)
+pool.on("connect", (client) => {
+  pgvector.registerTypes(client).catch((err) => {
+    console.error("[database] pgvector registration failed:", err);
+  });
+});
+
 export const query = pool.query.bind(pool);
+export { pgvector };
 
 export const connectDB = async () => {
   try {
     const client = await pool.connect();
     await client.query("SELECT 1");
+    try {
+      await pgvector.registerTypes(client);
+    } catch (pgvErr) {
+      console.warn("[database] pgvector not available (run migration 002 if using AI features):", (pgvErr as Error).message);
+    }
     client.release();
     console.log("PostgreSQL Connected!");
   } catch (error) {

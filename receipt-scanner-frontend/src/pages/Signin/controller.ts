@@ -1,13 +1,22 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { UseSigninControllerReturn } from './types';
 import { useAuth } from 'contexts/AuthContext';
 import { ApiClientError, apiClient } from 'services/apiClient';
+import { frontendEnv } from 'config/env';
 
 interface ApiSuccessResponse<T> {
   status: 'success';
   data: T;
 }
+
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  oauth_not_configured: 'Google sign-in is not configured. Please use email/password.',
+  oauth_denied: 'Google sign-in was cancelled.',
+  oauth_invalid: 'Invalid Google sign-in response. Please try again.',
+  oauth_no_email: 'Could not get email from Google. Please try another method.',
+  oauth_failed: 'Google sign-in failed. Please try again.',
+};
 
 export const useSigninController = (): UseSigninControllerReturn => {
   const [email, setEmail] = useState('');
@@ -19,7 +28,24 @@ export const useSigninController = (): UseSigninControllerReturn => {
   const [allowResend, setAllowResend] = useState(true);
 
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { signIn } = useAuth();
+
+  // Handle OAuth callback: token or error in URL
+  useEffect(() => {
+    const token = searchParams.get('token');
+    const err = searchParams.get('error');
+    if (token) {
+      signIn(token);
+      setSearchParams({}, { replace: true });
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+    if (err && OAUTH_ERROR_MESSAGES[err]) {
+      setError(OAUTH_ERROR_MESSAGES[err]);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, signIn, navigate, setSearchParams]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -81,6 +107,8 @@ export const useSigninController = (): UseSigninControllerReturn => {
     navigate('/forgot-password');
   };
 
+  const googleSignInUrl = `${frontendEnv.API_URL}/api/auth/google`;
+
   return {
     email,
     password,
@@ -91,5 +119,6 @@ export const useSigninController = (): UseSigninControllerReturn => {
     handleSubmit,
     handleResend,
     goToForgotPassword,
+    googleSignInUrl,
   };
 };
