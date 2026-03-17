@@ -156,10 +156,12 @@ async function executeTool(
       }
       const receipt = await ReceiptService.create({
         userId,
-        amount,
-        date,
-        description,
-        category: args.category as string | undefined,
+        dto: {
+          amount,
+          date,
+          description,
+          category: args.category as string | undefined,
+        },
       });
       return `Receipt added: ${formatReceiptForAgent(receipt)}`;
     }

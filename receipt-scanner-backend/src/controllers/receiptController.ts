@@ -2,12 +2,14 @@ import { Request, Response } from "express";
 import { UnauthorizedError } from "../errors/AppError";
 // express-validator uses CommonJS; import via require for compatibility
 const { validationResult } = require("express-validator");
+import type { CreateReceiptDto } from "../dtos/receipt";
 import { ReceiptService } from "../services/ReceiptService";
 import { asyncHandler } from "../middleware/asyncHandler";
 
 /**
  * Controllers: HTTP boundary only.
  * - Extract/validate input from req
+ * - Map to DTOs
  * - Delegate to service
  * - Format response
  * Errors propagate to errorHandler middleware.
@@ -26,12 +28,16 @@ const createReceipt = asyncHandler(async (req: Request, res: Response): Promise<
 
   const { amount, date, description, category } = req.body;
 
-  const receipt = await ReceiptService.create({
-    userId: currentUser.id,
+  const dto: CreateReceiptDto = {
     amount,
     date: date ? new Date(date) : new Date(),
     description,
     category,
+  };
+
+  const receipt = await ReceiptService.create({
+    userId: currentUser.id,
+    dto,
   });
 
   res.status(201).json({

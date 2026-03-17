@@ -1,7 +1,8 @@
-import * as receiptDb from "../db/receipts";
 import * as receiptEmbeddingsDb from "../db/receiptEmbeddings";
 import * as userDb from "../db/users";
+import type { CreateReceiptDto, ReceiptDto } from "../dtos/receipt";
 import { BadRequestError, ForbiddenError, NotFoundError } from "../errors/AppError";
+import * as receiptRepository from "../repositories/ReceiptRepository";
 import { env } from "../config/env";
 import { logAiOperation } from "../utils/aiLogger";
 import { categorizeReceipt } from "./CategorizationService";
@@ -10,16 +11,16 @@ import { generateEmbedding, receiptToEmbeddableText } from "./EmbeddingService";
 /**
  * ReceiptService: business logic for receipts.
  *
- * Separation of concerns: Controllers handle HTTP (params, body, res).
- * Service handles authorization, validation, and orchestrates data access.
- * DB layer handles persistence.
+ * Separation of concerns:
+ * - Controllers: HTTP boundary (params, body, response)
+ * - Service: business rules, validation, orchestration (this layer)
+ * - Repository: data access (ReceiptRepository)
+ *
+ * The service orchestrates: Repository (persistence) + EmbeddingService + CategorizationService.
  */
 export interface CreateReceiptInput {
   userId: string;
-  amount: number;
-  date: Date;
-  description: string;
-  category?: string;
+  dto: CreateReceiptDto;
 }
 
 const normalizeText = (value: string): string => {
@@ -48,80 +49,92 @@ const normalizeDate = (value: Date): Date => {
 };
 
 export const ReceiptService = {
-  async create(input: CreateReceiptInput) {
+  /**
+   * Creates a receipt after validating user exists and normalizing input.
+   * Triggers background jobs for embedding and LLM categorization when OpenAI is configured.
+   */
+  async create(input: CreateReceiptInput): Promise<ReceiptDto> {
     const user = await userDb.findUserById(input.userId);
     if (!user) {
       throw new NotFoundError("User not found");
     }
 
-    const description = normalizeText(input.description);
+    const description = normalizeText(input.dto.description);
     if (description.length === 0) {
       throw new BadRequestError("Description is required");
     }
 
-    const receipt = await receiptDb.createReceipt({
-      userId: input.userId,
-      amount: normalizeAmount(input.amount),
-      date: normalizeDate(input.date),
+    const normalizedDto: CreateReceiptDto = {
+      amount: normalizeAmount(input.dto.amount),
+      date: normalizeDate(input.dto.date),
       description,
-      category: normalizeCategory(input.category),
-    });
+      category: normalizeCategory(input.dto.category),
+    };
 
-    // Background: embedding + auto-categorization (non-blocking)
+    const receipt = await receiptRepository.create(input.userId, normalizedDto);
+
+    // Background: embedding + auto-categorization (non-blocking, fire-and-forget)
     if (env.OPENAI_API_KEY?.trim()) {
-      void (async () => {
-        try {
-          // 1. Auto-categorize if uncategorized
-          let category = receipt.category;
-          let reasoning: string | undefined;
-          if (category === "uncategorized") {
-            try {
-              const catResult = await categorizeReceipt(
-                receipt.description,
-                receipt.amount
-              );
-              category = catResult.category;
-              reasoning = catResult.reasoning;
-              await receiptDb.updateReceiptCategoryAndReasoning(
-                receipt.id,
-                category,
-                reasoning
-              );
-            } catch (err) {
-              logAiOperation({
-                operation: "categorization",
-                userId: receipt.userId,
-                success: false,
-                error: (err as Error).message,
-              });
-            }
-          }
-
-          // 2. Generate embedding (use updated category if we categorized)
-          const text = receiptToEmbeddableText({
-            description: receipt.description,
-            category,
-            amount: receipt.amount,
-            date: receipt.date,
-          });
-          const embedding = await generateEmbedding(text);
-          await receiptEmbeddingsDb.updateReceiptEmbedding(receipt.id, embedding);
-        } catch (err) {
-          logAiOperation({
-            operation: "embedding",
-            userId: receipt.userId,
-            success: false,
-            error: (err as Error).message,
-          });
-        }
-      })();
+      void this.runBackgroundAiJobs(receipt);
     }
 
     return receipt;
   },
 
-  async findByUserId(userId: string) {
-    return receiptDb.findReceiptsByUserId(userId);
+  /**
+   * Runs AI jobs (categorization, embedding) in the background.
+   * Failures are logged but do not affect the create response.
+   */
+  async runBackgroundAiJobs(receipt: ReceiptDto): Promise<void> {
+    try {
+      let category = receipt.category ?? "uncategorized";
+      let reasoning: string | undefined;
+
+      // 1. Auto-categorize if uncategorized
+      if (category === "uncategorized") {
+        try {
+          const catResult = await categorizeReceipt(
+            receipt.description,
+            receipt.amount
+          );
+          category = catResult.category;
+          reasoning = catResult.reasoning;
+          await receiptRepository.updateCategoryAndReasoning(
+            receipt.id,
+            category,
+            reasoning
+          );
+        } catch (err) {
+          logAiOperation({
+            operation: "categorization",
+            userId: receipt.userId,
+            success: false,
+            error: (err as Error).message,
+          });
+        }
+      }
+
+      // 2. Generate embedding for RAG/semantic search
+      const text = receiptToEmbeddableText({
+        description: receipt.description,
+        category,
+        amount: receipt.amount,
+        date: receipt.date,
+      });
+      const embedding = await generateEmbedding(text);
+      await receiptEmbeddingsDb.updateReceiptEmbedding(receipt.id, embedding);
+    } catch (err) {
+      logAiOperation({
+        operation: "embedding",
+        userId: receipt.userId,
+        success: false,
+        error: (err as Error).message,
+      });
+    }
+  },
+
+  async findByUserId(userId: string): Promise<ReceiptDto[]> {
+    return receiptRepository.findByUserId(userId);
   },
 
   /** Ensures requester can only access their own receipts */
