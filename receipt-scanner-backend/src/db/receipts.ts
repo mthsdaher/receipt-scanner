@@ -7,6 +7,7 @@ export interface ReceiptRow {
   date: Date;
   description: string;
   category?: string;
+  categorization_reasoning?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -19,6 +20,7 @@ function rowToReceipt(row: ReceiptRow) {
     date: row.date,
     description: row.description,
     category: row.category ?? undefined,
+    categorizationReasoning: row.categorization_reasoning ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -52,4 +54,15 @@ export async function findReceiptsByUserId(userId: string) {
     [userId]
   );
   return res.rows.map(rowToReceipt);
+}
+
+export async function updateReceiptCategoryAndReasoning(
+  receiptId: string,
+  category: string,
+  reasoning: string
+): Promise<void> {
+  await pool.query(
+    "UPDATE receipts SET category = $1, categorization_reasoning = $2 WHERE id = $3",
+    [category.trim(), reasoning.trim(), receiptId]
+  );
 }

@@ -3,6 +3,7 @@ import * as receiptEmbeddingsDb from "../db/receiptEmbeddings";
 import * as userDb from "../db/users";
 import { BadRequestError, ForbiddenError, NotFoundError } from "../errors/AppError";
 import { env } from "../config/env";
+import { categorizeReceipt } from "./CategorizationService";
 import { generateEmbedding, receiptToEmbeddableText } from "./EmbeddingService";
 
 /**
@@ -65,13 +66,35 @@ export const ReceiptService = {
       category: normalizeCategory(input.category),
     });
 
-    // Background: generate and store embedding for RAG (non-blocking)
+    // Background: embedding + auto-categorization (non-blocking)
     if (env.OPENAI_API_KEY?.trim()) {
       void (async () => {
         try {
+          // 1. Auto-categorize if uncategorized
+          let category = receipt.category;
+          let reasoning: string | undefined;
+          if (category === "uncategorized") {
+            try {
+              const catResult = await categorizeReceipt(
+                receipt.description,
+                receipt.amount
+              );
+              category = catResult.category;
+              reasoning = catResult.reasoning;
+              await receiptDb.updateReceiptCategoryAndReasoning(
+                receipt.id,
+                category,
+                reasoning
+              );
+            } catch (err) {
+              console.warn("[ReceiptService] Categorization skipped:", (err as Error).message);
+            }
+          }
+
+          // 2. Generate embedding (use updated category if we categorized)
           const text = receiptToEmbeddableText({
             description: receipt.description,
-            category: receipt.category,
+            category,
             amount: receipt.amount,
             date: receipt.date,
           });

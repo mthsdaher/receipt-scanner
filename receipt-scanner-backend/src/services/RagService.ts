@@ -1,10 +1,27 @@
 import OpenAI from "openai";
 import { env } from "../config/env";
 import { generateEmbedding } from "./EmbeddingService";
-import { findSimilarReceipts } from "../db/receiptEmbeddings";
+import { findSimilarReceipts, ReceiptWithSimilarity } from "../db/receiptEmbeddings";
 import { ServiceUnavailableError } from "../errors/AppError";
 
 const RAG_CONTEXT_LIMIT = 5;
+
+/**
+ * Semantic search over receipts. Returns receipts similar to the query.
+ * Used by the agentic workflow's search_receipts tool.
+ */
+export async function searchReceiptsSemantic(
+  userId: string,
+  query: string
+): Promise<ReceiptWithSimilarity[]> {
+  if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim() === "") {
+    throw new ServiceUnavailableError(
+      "AI features require OPENAI_API_KEY. Add it to your .env to enable semantic search."
+    );
+  }
+  const queryEmbedding = await generateEmbedding(query.trim());
+  return findSimilarReceipts(userId, queryEmbedding, RAG_CONTEXT_LIMIT);
+}
 
 function formatReceiptForContext(r: {
   description: string;
