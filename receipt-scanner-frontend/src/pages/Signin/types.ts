@@ -2,6 +2,7 @@ export interface UseSigninControllerReturn {
   email: string;
   password: string;
   error: string;
+  oauthLoading: boolean;
   allowResend: boolean;
   formattedTimer: string;
   handleChange: (field: 'email' | 'password') => (e: React.ChangeEvent<HTMLInputElement>) => void;

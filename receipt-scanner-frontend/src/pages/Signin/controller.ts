@@ -31,11 +31,14 @@ export const useSigninController = (): UseSigninControllerReturn => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { signIn } = useAuth();
 
+  const [oauthLoading, setOauthLoading] = useState(false);
+
   // Handle OAuth callback: token or error in URL
   useEffect(() => {
     const token = searchParams.get('token');
     const err = searchParams.get('error');
     if (token) {
+      setOauthLoading(true);
       signIn(token);
       setSearchParams({}, { replace: true });
       navigate('/dashboard', { replace: true });
@@ -64,6 +67,7 @@ export const useSigninController = (): UseSigninControllerReturn => {
   }, [timer]);
 
   const handleChange = (field: 'email' | 'password') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError('');
     if (field === 'email') setEmail(e.target.value);
     else setPassword(e.target.value);
   };
@@ -113,6 +117,7 @@ export const useSigninController = (): UseSigninControllerReturn => {
     email,
     password,
     error,
+    oauthLoading,
     allowResend,
     formattedTimer,
     handleChange,
