@@ -8,6 +8,10 @@ export interface ReceiptRow {
   description: string;
   category?: string;
   categorization_reasoning?: string;
+  subtotal?: number;
+  tax?: number;
+  validation_status?: string;
+  validation_reason?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -21,6 +25,10 @@ function rowToReceipt(row: ReceiptRow) {
     description: row.description,
     category: row.category ?? undefined,
     categorizationReasoning: row.categorization_reasoning ?? undefined,
+    subtotal: row.subtotal != null ? Number(row.subtotal) : undefined,
+    tax: row.tax != null ? Number(row.tax) : undefined,
+    validationStatus: (row.validation_status ?? "not_validated") as "valid" | "invalid" | "not_validated",
+    validationReason: row.validation_reason ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -32,10 +40,14 @@ export async function createReceipt(data: {
   date: Date;
   description: string;
   category?: string;
+  subtotal?: number;
+  tax?: number;
+  validation_status: string;
+  validation_reason?: string;
 }) {
   const res = await pool.query<ReceiptRow>(
-    `INSERT INTO receipts (user_id, amount, date, description, category)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO receipts (user_id, amount, date, description, category, subtotal, tax, validation_status, validation_reason)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      RETURNING *`,
     [
       data.userId,
@@ -43,6 +55,10 @@ export async function createReceipt(data: {
       data.date,
       data.description.trim(),
       data.category?.trim() ?? null,
+      data.subtotal ?? null,
+      data.tax ?? null,
+      data.validation_status,
+      data.validation_reason ?? null,
     ]
   );
   return rowToReceipt(res.rows[0]);

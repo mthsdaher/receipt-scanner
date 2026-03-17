@@ -2,11 +2,16 @@ import * as receiptEmbeddingsDb from "../db/receiptEmbeddings";
 import * as userDb from "../db/users";
 import type { CreateReceiptDto, ReceiptDto } from "../dtos/receipt";
 import { BadRequestError, ForbiddenError, NotFoundError } from "../errors/AppError";
+import type { CreateReceiptData } from "../repositories/ReceiptRepository";
 import * as receiptRepository from "../repositories/ReceiptRepository";
 import { env } from "../config/env";
 import { logAiOperation } from "../utils/aiLogger";
 import { categorizeReceipt } from "./CategorizationService";
 import { generateEmbedding, receiptToEmbeddableText } from "./EmbeddingService";
+import {
+  validateReceiptTotals,
+  type ValidationStatus,
+} from "./ReceiptValidationService";
 
 /**
  * ReceiptService: business logic for receipts.
@@ -48,6 +53,15 @@ const normalizeDate = (value: Date): Date => {
   return value;
 };
 
+/** Normalizes optional financial field. Returns undefined if not provided or invalid. */
+const normalizeOptionalAmount = (value: number | undefined): number | undefined => {
+  if (value === undefined || value === null) return undefined;
+  if (!Number.isFinite(value) || value < 0) {
+    throw new BadRequestError("Subtotal and tax must be non-negative numbers when provided");
+  }
+  return Number(value.toFixed(2));
+};
+
 export const ReceiptService = {
   /**
    * Creates a receipt after validating user exists and normalizing input.
@@ -64,14 +78,32 @@ export const ReceiptService = {
       throw new BadRequestError("Description is required");
     }
 
-    const normalizedDto: CreateReceiptDto = {
-      amount: normalizeAmount(input.dto.amount),
+    const amount = normalizeAmount(input.dto.amount);
+    const subtotal = normalizeOptionalAmount(input.dto.subtotal);
+    const tax = normalizeOptionalAmount(input.dto.tax);
+
+    // Financial validation: subtotal + tax must equal total when both are provided
+    const validation = validateReceiptTotals(subtotal, tax, amount);
+
+    // Reject invalid receipts - fintech best practice: do not persist inconsistent data
+    if (validation.status === "invalid") {
+      throw new BadRequestError(
+        validation.reason ?? "Receipt totals are inconsistent. Subtotal + tax must equal total."
+      );
+    }
+
+    const createData: CreateReceiptData = {
+      amount,
       date: normalizeDate(input.dto.date),
       description,
       category: normalizeCategory(input.dto.category),
+      subtotal,
+      tax,
+      validationStatus: validation.status as ValidationStatus,
+      validationReason: undefined,
     };
 
-    const receipt = await receiptRepository.create(input.userId, normalizedDto);
+    const receipt = await receiptRepository.create(input.userId, createData);
 
     // Background: embedding + auto-categorization (non-blocking, fire-and-forget)
     if (env.OPENAI_API_KEY?.trim()) {

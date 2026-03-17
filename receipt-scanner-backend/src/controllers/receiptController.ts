@@ -26,13 +26,15 @@ const createReceipt = asyncHandler(async (req: Request, res: Response): Promise<
     throw new UnauthorizedError("Token missing or invalid");
   }
 
-  const { amount, date, description, category } = req.body;
+  const { amount, date, description, category, subtotal, tax } = req.body;
 
   const dto: CreateReceiptDto = {
     amount,
     date: date ? new Date(date) : new Date(),
     description,
     category,
+    subtotal,
+    tax,
   };
 
   const receipt = await ReceiptService.create({

@@ -13,24 +13,37 @@
  */
 
 import * as receiptDb from "../db/receipts";
-import type { CreateReceiptDto, ReceiptDto } from "../dtos/receipt";
+import type { CreateReceiptDto, ReceiptDto, ReceiptValidationStatus } from "../dtos/receipt";
+
+/**
+ * Data passed to create - includes validation result computed by the service.
+ * Validation status is never trusted from the client; always computed server-side.
+ */
+export interface CreateReceiptData extends CreateReceiptDto {
+  validationStatus: ReceiptValidationStatus;
+  validationReason?: string;
+}
 
 /**
  * Creates a new receipt in the database.
  * @param userId - Owner of the receipt
- * @param dto - Receipt data from the service layer
+ * @param data - Receipt data including validation result (from service layer)
  * @returns The created receipt as ReceiptDto
  */
 export async function create(
   userId: string,
-  dto: CreateReceiptDto
+  data: CreateReceiptData
 ): Promise<ReceiptDto> {
   const row = await receiptDb.createReceipt({
     userId,
-    amount: dto.amount,
-    date: dto.date,
-    description: dto.description,
-    category: dto.category,
+    amount: data.amount,
+    date: data.date,
+    description: data.description,
+    category: data.category,
+    subtotal: data.subtotal,
+    tax: data.tax,
+    validation_status: data.validationStatus,
+    validation_reason: data.validationReason,
   });
   return row as ReceiptDto;
 }

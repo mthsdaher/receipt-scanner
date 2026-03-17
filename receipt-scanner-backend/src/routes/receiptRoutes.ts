@@ -30,6 +30,14 @@ router.post(
       .trim()
       .isLength({ max: 80 })
       .withMessage('Category must be at most 80 characters'),
+    body('subtotal')
+      .optional()
+      .isFloat({ min: 0 })
+      .withMessage('Subtotal must be a non-negative number'),
+    body('tax')
+      .optional()
+      .isFloat({ min: 0 })
+      .withMessage('Tax must be a non-negative number'),
   ],
   createReceipt
 );
