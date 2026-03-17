@@ -1,8 +1,9 @@
 import OpenAI from "openai";
 import { env } from "../config/env";
-import { ReceiptService } from "./ReceiptService";
-import { searchReceiptsSemantic } from "./RagService";
 import { ServiceUnavailableError } from "../errors/AppError";
+import { logAiOperation } from "../utils/aiLogger";
+import { searchReceiptsSemantic } from "./RagService";
+import { ReceiptService } from "./ReceiptService";
 
 const MAX_AGENT_ITERATIONS = 5;
 
@@ -200,16 +201,20 @@ export async function runAgent(
     throw new ServiceUnavailableError("Message cannot be empty");
   }
 
-  const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+  const startMs = Date.now();
+  let toolCallsCount = 0;
 
-  const systemPrompt = `You are a helpful financial assistant for a receipt tracking app. You can:
+  try {
+    const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+
+    const systemPrompt = `You are a helpful financial assistant for a receipt tracking app. You can:
 - get_receipts: List the user's receipts, optionally filtered by category or date range
 - add_receipt: Add a new receipt (amount, description, optional date and category)
 - search_receipts: Search receipts by natural language (e.g. "groceries", "restaurants last month")
 
 Use the tools when needed to fulfill the user's request. Be concise and helpful.`;
 
-  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt },
     { role: "user", content: normalizedMessage },
   ];
@@ -230,12 +235,26 @@ Use the tools when needed to fulfill the user's request. Be concise and helpful.
     const message = choice?.message;
 
     if (!message) {
+      logAiOperation({
+        operation: "agent_chat",
+        userId,
+        durationMs: Date.now() - startMs,
+        success: true,
+        toolCalls: toolCallsCount,
+      });
       return { response: "I couldn't generate a response. Please try again." };
     }
 
     // No tool calls - we have the final response
     if (!message.tool_calls || message.tool_calls.length === 0) {
       const content = message.content?.trim();
+      logAiOperation({
+        operation: "agent_chat",
+        userId,
+        durationMs: Date.now() - startMs,
+        success: true,
+        toolCalls: toolCallsCount,
+      });
       return {
         response: content ?? "I couldn't generate a response. Please try again.",
       };
@@ -243,6 +262,7 @@ Use the tools when needed to fulfill the user's request. Be concise and helpful.
 
     // Add assistant message with tool calls
     messages.push(message);
+    toolCallsCount += message.tool_calls.length;
 
     // Execute each tool call and add results
     for (const toolCall of message.tool_calls) {
@@ -266,8 +286,25 @@ Use the tools when needed to fulfill the user's request. Be concise and helpful.
     }
   }
 
-  return {
-    response:
-      "I reached the maximum number of steps. Please try a simpler request.",
-  };
+    logAiOperation({
+      operation: "agent_chat",
+      userId,
+      durationMs: Date.now() - startMs,
+      success: true,
+      toolCalls: toolCallsCount,
+    });
+    return {
+      response:
+        "I reached the maximum number of steps. Please try a simpler request.",
+    };
+  } catch (err) {
+    logAiOperation({
+      operation: "agent_chat",
+      userId,
+      durationMs: Date.now() - startMs,
+      success: false,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    throw err;
+  }
 }

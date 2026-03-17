@@ -1,11 +1,17 @@
 import { Router } from "express";
 const { body } = require("express-validator");
-import { postAiChat, postAiQuery } from "../controllers/aiController";
+import { getAiHealth, postAiChat, postAiQuery } from "../controllers/aiController";
 import { currentUser } from "../middleware/current-user";
 import { requireAuth } from "../middleware/require-auth";
 import { receiptReadRateLimiter } from "../middleware/rate-limiters";
 
 const router = Router();
+
+/**
+ * GET /api/ai/health
+ * Check if AI features are available (OpenAI key, pgvector).
+ */
+router.get("/health", getAiHealth);
 
 /**
  * POST /api/ai/query

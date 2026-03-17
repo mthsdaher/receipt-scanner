@@ -12,6 +12,7 @@ import VerificationCode from "./pages/VerificationCode";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import History from "./pages/History";
+import AiChat from "./pages/AiChat";
 import { useAuth } from './contexts/AuthContext';
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -64,6 +65,14 @@ const App: React.FC = () => (
           element={
             <ProtectedRoute>
               <InsertReceipt />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-assistant"
+          element={
+            <ProtectedRoute>
+              <AiChat />
             </ProtectedRoute>
           }
         />

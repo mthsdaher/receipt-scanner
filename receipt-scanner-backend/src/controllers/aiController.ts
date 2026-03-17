@@ -1,9 +1,29 @@
 import { Request, Response } from "express";
 import { UnauthorizedError } from "../errors/AppError";
 const { validationResult } = require("express-validator");
+import { isPgVectorAvailable } from "../config/database";
+import { env } from "../config/env";
 import { runAgent } from "../services/AgentService";
 import { queryReceipts } from "../services/RagService";
 import { asyncHandler } from "../middleware/asyncHandler";
+
+/**
+ * GET /api/ai/health
+ * Check AI features availability (no auth required).
+ */
+const getAiHealth = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+  const openaiConfigured = !!(env.OPENAI_API_KEY && env.OPENAI_API_KEY.trim());
+  const pgvectorAvailable = await isPgVectorAvailable();
+
+  res.json({
+    status: "success",
+    data: {
+      openai: openaiConfigured ? "configured" : "missing",
+      pgvector: pgvectorAvailable ? "available" : "unavailable",
+      aiReady: openaiConfigured && pgvectorAvailable,
+    },
+  });
+});
 
 /**
  * POST /api/ai/query
@@ -55,4 +75,4 @@ const postAiChat = asyncHandler(async (req: Request, res: Response): Promise<voi
   });
 });
 
-export { postAiQuery, postAiChat };
+export { getAiHealth, postAiChat, postAiQuery };

@@ -3,6 +3,7 @@ import * as receiptEmbeddingsDb from "../db/receiptEmbeddings";
 import * as userDb from "../db/users";
 import { BadRequestError, ForbiddenError, NotFoundError } from "../errors/AppError";
 import { env } from "../config/env";
+import { logAiOperation } from "../utils/aiLogger";
 import { categorizeReceipt } from "./CategorizationService";
 import { generateEmbedding, receiptToEmbeddableText } from "./EmbeddingService";
 
@@ -87,7 +88,12 @@ export const ReceiptService = {
                 reasoning
               );
             } catch (err) {
-              console.warn("[ReceiptService] Categorization skipped:", (err as Error).message);
+              logAiOperation({
+                operation: "categorization",
+                userId: receipt.userId,
+                success: false,
+                error: (err as Error).message,
+              });
             }
           }
 
@@ -101,7 +107,12 @@ export const ReceiptService = {
           const embedding = await generateEmbedding(text);
           await receiptEmbeddingsDb.updateReceiptEmbedding(receipt.id, embedding);
         } catch (err) {
-          console.warn("[ReceiptService] Embedding skipped:", (err as Error).message);
+          logAiOperation({
+            operation: "embedding",
+            userId: receipt.userId,
+            success: false,
+            error: (err as Error).message,
+          });
         }
       })();
     }

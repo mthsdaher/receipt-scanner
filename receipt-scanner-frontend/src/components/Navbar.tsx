@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   History,
   PlusCircle,
+  MessageSquare,
   LogIn,
   LogOut,
 } from 'lucide-react';
@@ -20,6 +21,7 @@ const privateNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/historic', label: 'History', icon: History },
   { path: '/insert-receipt', label: 'Insert', icon: PlusCircle },
+  { path: '/ai-assistant', label: 'AI Assistant', icon: MessageSquare },
 ];
 
 const Navbar: React.FC = () => {

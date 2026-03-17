@@ -45,6 +45,17 @@ export const isDatabaseHealthy = async (): Promise<boolean> => {
   }
 };
 
+export const isPgVectorAvailable = async (): Promise<boolean> => {
+  try {
+    const res = await pool.query(
+      "SELECT 1 FROM pg_extension WHERE extname = 'vector' LIMIT 1"
+    );
+    return res.rowCount !== null && res.rowCount > 0;
+  } catch {
+    return false;
+  }
+};
+
 export const closeDB = async (): Promise<void> => {
   await pool.end();
 };
