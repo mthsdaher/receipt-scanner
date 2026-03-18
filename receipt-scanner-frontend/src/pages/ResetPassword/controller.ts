@@ -33,7 +33,7 @@ export const useResetPasswordController = (): UseResetPasswordControllerReturn =
     setSuccessMessage("");
 
     try {
-      await apiClient.post("/api/users/reset-password", {
+      await apiClient.post("/api/v1/users/reset-password", {
         email,
         resetToken,
         newPassword,

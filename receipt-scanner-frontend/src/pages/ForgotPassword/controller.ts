@@ -27,7 +27,7 @@ export const useForgotPasswordController = (): UseForgotPasswordControllerReturn
 
     try {
       const response = await apiClient.post<ApiSuccessResponse<{ resetToken?: string }>>(
-        "/api/users/reset-request",
+        "/api/v1/users/reset-request",
         { email }
       );
       setSuccessMessage(response.message ?? "Reset instructions generated successfully.");

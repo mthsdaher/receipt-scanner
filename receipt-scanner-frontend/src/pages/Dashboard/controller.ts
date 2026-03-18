@@ -73,7 +73,7 @@ export const useDashboardController = (): UseDashboardControllerReturn => {
     setError("");
     try {
       const response = await apiClient.get<ApiSuccessResponse<Receipt[]>>(
-        `/api/receipts/${userId}`,
+        `/api/v1/receipts/${userId}`,
         signOut
       );
       setReceipts(response.data);

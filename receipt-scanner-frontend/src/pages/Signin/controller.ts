@@ -75,7 +75,7 @@ export const useSigninController = (): UseSigninControllerReturn => {
   const handleSubmit = async () => {
     setError('');
     try {
-      const response = await apiClient.post<ApiSuccessResponse<{ token: string }>>('/api/users/login', {
+      const response = await apiClient.post<ApiSuccessResponse<{ token: string }>>('/api/v1/users/login', {
         email,
         password,
       });
@@ -96,7 +96,7 @@ export const useSigninController = (): UseSigninControllerReturn => {
     setTimer(300);
 
     try {
-      await apiClient.post('/api/users/resend-code', { email });
+      await apiClient.post('/api/v1/users/resend-code', { email });
       navigate('/verify-code', { state: { email } });
     } catch (err) {
       if (err instanceof ApiClientError && err.status === 429) {
@@ -111,7 +111,7 @@ export const useSigninController = (): UseSigninControllerReturn => {
     navigate('/forgot-password');
   };
 
-  const googleSignInUrl = `${frontendEnv.API_URL}/api/auth/google`;
+  const googleSignInUrl = `${frontendEnv.API_URL}/api/v1/auth/google`;
 
   return {
     email,

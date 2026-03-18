@@ -33,7 +33,7 @@ export function useAiChatController() {
 
       try {
         const res = await apiClient.post<{ status: string; data: { response: string } }>(
-          "/api/ai/chat",
+          "/api/v1/ai/chat",
           { message: text.trim() },
           handleUnauthorized
         );

@@ -60,7 +60,7 @@ export const useHistoryController = (): UseHistoryControllerReturn => {
 
     try {
       const response = await apiClient.get<ApiSuccessResponse<ReceiptHistoryItem[]>>(
-        `/api/receipts/${userId}`,
+        `/api/v1/receipts/${userId}`,
         signOut
       );
       setRawReceipts(response.data);

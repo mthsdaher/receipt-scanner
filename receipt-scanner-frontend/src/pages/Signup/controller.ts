@@ -42,7 +42,7 @@ export const useSignupController = (): SignupControllerReturn => {
         ApiSuccessResponse<{
           verificationCode?: string;
         }>
-      >("/api/users/signup", form);
+      >("/api/v1/users/signup", form);
       // Pass email and code via state to verify page (code only in dev when no email sending)
       navigate("/verify-code", {
         state: { email: form.email, verificationCode: response.data.verificationCode },
@@ -61,6 +61,6 @@ export const useSignupController = (): SignupControllerReturn => {
     error,
     handleChange,
     handleSubmit,
-    googleSignUpUrl: `${frontendEnv.API_URL}/api/auth/google`,
+    googleSignUpUrl: `${frontendEnv.API_URL}/api/v1/auth/google`,
   };
 };

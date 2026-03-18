@@ -47,7 +47,7 @@ export const useVerificationController = (): UseVerificationControllerReturn => 
     setVerifyError('');
     try {
       const response = await apiClient.post<ApiSuccessResponse<{ verificationCode?: string }>>(
-        '/api/users/resend-code',
+        '/api/v1/users/resend-code',
         { email }
       );
       setTimer(300);
@@ -65,7 +65,7 @@ export const useVerificationController = (): UseVerificationControllerReturn => 
     setVerifyError('');
     setIsVerifying(true);
     try {
-      const response = await apiClient.post<ApiSuccessResponse<{ token: string }>>('/api/users/validate-code', {
+      const response = await apiClient.post<ApiSuccessResponse<{ token: string }>>('/api/v1/users/validate-code', {
         email,
         code: codeInput,
       });

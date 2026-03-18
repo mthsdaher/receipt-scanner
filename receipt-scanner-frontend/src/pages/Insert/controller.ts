@@ -61,7 +61,7 @@ export const useInsertReceiptController = () => {
 
     try {
       const response = await apiClient.postForm<ApiSuccessResponse<ParsedReceipt>>(
-        "/api/paddle/ocr",
+        "/api/v1/paddle/ocr",
         formData,
         signOut
       );
@@ -103,7 +103,7 @@ export const useInsertReceiptController = () => {
       setSaving(true);
       setError("");
       await apiClient.post(
-        "/api/receipts",
+        "/api/v1/receipts",
         {
           amount,
           date: receiptForm.date,
