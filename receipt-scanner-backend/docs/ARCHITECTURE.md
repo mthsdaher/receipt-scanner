@@ -48,14 +48,34 @@ The backend follows a clean layered architecture for maintainability and testabi
 
 ```
 src/
-├── controllers/     # HTTP handlers
-├── services/        # Business logic
-├── repositories/    # Data access (wraps db/)
-├── dtos/            # Data Transfer Objects
+├── controllers/     # HTTP handlers (extract body, validate, call service)
+├── services/        # Business logic (orchestrate, validate, authorize)
+├── repositories/    # Data access (wraps db/, maps DTOs)
+├── dtos/            # Data Transfer Objects (contracts between layers)
 │   └── receipt/
-├── db/              # Low-level DB (pool, raw queries)
-├── middleware/
-├── routes/
-├── config/
-└── errors/
+├── db/              # Low-level DB (pool, raw SQL, snake_case)
+├── middleware/      # Auth, logging, rate limit, error handler
+├── routes/          # Route definitions + express-validator
+├── config/          # env, database config
+├── errors/          # AppError hierarchy (400, 401, 403, 404, 409, 503)
+└── utils/           # aiSafety, aiLogger, requestContext, logger
 ```
+
+## Naming Conventions
+
+| Layer | DB columns | API/DTOs |
+|-------|------------|----------|
+| Database | snake_case (validation_status, user_id) | — |
+| DTOs | — | camelCase (validationStatus, userId) |
+| Repository | Maps between DB and DTO |
+
+## Error Handling
+
+All errors flow to `errorHandler` middleware. Use `AppError` subclasses:
+
+- `BadRequestError` (400): Invalid input
+- `UnauthorizedError` (401): Not authenticated
+- `ForbiddenError` (403): Authenticated but not allowed
+- `NotFoundError` (404): Resource not found
+- `ConflictError` (409): Duplicate resource
+- `ServiceUnavailableError` (503): External service down

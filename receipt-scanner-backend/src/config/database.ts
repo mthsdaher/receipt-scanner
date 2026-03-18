@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import pgvector from "pgvector/pg";
 import { env } from "./env";
+import { appLogger } from "../utils/logger";
 
 const pool = new Pool({
   connectionString: env.DATABASE_URL,
@@ -12,7 +13,10 @@ const pool = new Pool({
 // Register pgvector types for each new connection (required for vector columns)
 pool.on("connect", (client) => {
   pgvector.registerTypes(client).catch((err) => {
-    console.error("[database] pgvector registration failed:", err);
+    appLogger.error(
+      { event: "database_pgvector_registration_failed", error: (err as Error).message },
+      "pgvector registration failed"
+    );
   });
 });
 
@@ -29,16 +33,30 @@ export const connectDB = async (retries = 5) => {
       try {
         await pgvector.registerTypes(client);
       } catch (pgvErr) {
-        console.warn("[database] pgvector not available (run migration 002 if using AI features):", (pgvErr as Error).message);
+        appLogger.warn(
+          {
+            event: "database_pgvector_unavailable",
+            message: (pgvErr as Error).message,
+          },
+          "pgvector not available (run migration 002 if using AI features)"
+        );
       }
       client.release();
-      console.log("PostgreSQL Connected!");
+      appLogger.info({ event: "database_connected" }, "PostgreSQL Connected!");
       return;
     } catch (error) {
-      console.error(`Error connecting to PostgreSQL (attempt ${attempt}/${retries}):`, error);
+      appLogger.error(
+        {
+          event: "database_connection_failed",
+          attempt,
+          retries,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        `PostgreSQL connection failed (attempt ${attempt}/${retries})`
+      );
       if (attempt === retries) throw error;
       const delay = attempt * 2000;
-      console.log(`Retrying in ${delay / 1000}s...`);
+      appLogger.info({ event: "database_retry", delayMs: delay }, `Retrying in ${delay / 1000}s...`);
       await sleep(delay);
     }
   }
