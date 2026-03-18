@@ -5,6 +5,10 @@ import { isDatabaseHealthy } from "../config/database";
 const router = Router();
 const startedAt = Date.now();
 
+/**
+ * Liveness: minimal check that the process is running.
+ * Used by orchestrators (Kubernetes, Railway) to restart unhealthy containers.
+ */
 router.get("/health", (_req: Request, res: Response) => {
   res.status(200).json({
     status: "success",
@@ -16,6 +20,10 @@ router.get("/health", (_req: Request, res: Response) => {
   });
 });
 
+/**
+ * Readiness: checks if the service can accept traffic (e.g. DB connected).
+ * Returns 503 if not ready so load balancers stop sending requests.
+ */
 router.get("/ready", async (_req: Request, res: Response) => {
   const dbHealthy = await isDatabaseHealthy();
   const statusCode = dbHealthy ? 200 : 503;
