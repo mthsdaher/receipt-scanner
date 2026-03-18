@@ -1,4 +1,4 @@
-import { appLogger } from "../middleware/logger";
+import { getContextLogger } from "./requestContext";
 
 type AiOperation =
   | "embedding"
@@ -18,15 +18,16 @@ interface AiLogMeta {
 
 /**
  * Logs AI operations for monitoring and debugging.
- * Use for RAG, agent, categorization, and embedding flows.
+ * Uses request context when available (adds requestId for tracing).
  */
 export function logAiOperation(meta: AiLogMeta): void {
+  const log = getContextLogger("ai");
   const event = meta.success ? "ai_operation_success" : "ai_operation_failed";
   const logMeta = { event, ...meta };
   if (meta.success) {
-    appLogger.info(logMeta, event);
+    log.info(logMeta, event);
   } else {
-    appLogger.warn(logMeta, event);
+    log.warn(logMeta, event);
   }
 }
 

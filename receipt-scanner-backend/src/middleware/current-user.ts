@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { env } from '../config/env';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { env } from "../config/env";
+import { setRequestContextUserId } from "../utils/requestContext";
 
 interface UserPayload {
   id: string;
@@ -12,19 +13,22 @@ export const currentUser = (
   res: Response,
   next: NextFunction
 ): void => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
+  const token = req.header("Authorization")?.replace("Bearer ", "");
 
   if (!token) {
     req.currentUser = undefined;
+    setRequestContextUserId(undefined);
     return next();
   }
 
   try {
     const payload = jwt.verify(token, env.JWT_SECRET) as UserPayload;
-    req.currentUser = payload; // Attach user payload to request
+    req.currentUser = payload;
+    setRequestContextUserId(payload.id);
     next();
-  } catch (error) {
-    req.currentUser = undefined; // Invalid token, no user
+  } catch {
+    req.currentUser = undefined;
+    setRequestContextUserId(undefined);
     next();
   }
 };

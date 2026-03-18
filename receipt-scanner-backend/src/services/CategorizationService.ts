@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { z } from "zod";
 import { env } from "../config/env";
 import { ServiceUnavailableError } from "../errors/AppError";
+import { callWithAiSafety } from "../utils/aiSafety";
 
 const CATEGORIES = [
   "food",
@@ -22,6 +23,7 @@ export type CategorizationResult = z.infer<typeof categorySchema>;
 /**
  * Suggests a category for a receipt using LLM with structured output.
  * Returns category and reasoning (explainability).
+ * Wrapped with timeout and retry. Used in background—failure does not block receipt creation.
  *
  * @throws ServiceUnavailableError if OPENAI_API_KEY is not set
  */
@@ -40,24 +42,25 @@ export async function categorizeReceipt(
     return { category: "other", reasoning: "No description provided" };
   }
 
-  const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
-
   const amountHint = amount !== undefined ? ` Amount: $${Number(amount).toFixed(2)}.` : "";
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content: `You categorize receipts. Return JSON with "category" (one of: ${CATEGORIES.join(", ")}) and "reasoning" (brief explanation). Be concise.`,
-      },
-      {
-        role: "user",
-        content: `Categorize this receipt: "${normalizedDesc}".${amountHint}`,
-      },
-    ],
-    response_format: { type: "json_object" },
-    max_tokens: 150,
+  const completion = await callWithAiSafety("categorization", async () => {
+    const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+    return openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `You categorize receipts. Return JSON with "category" (one of: ${CATEGORIES.join(", ")}) and "reasoning" (brief explanation). Be concise.`,
+        },
+        {
+          role: "user",
+          content: `Categorize this receipt: "${normalizedDesc}".${amountHint}`,
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 150,
+    });
   });
 
   const content = completion.choices[0]?.message?.content?.trim();

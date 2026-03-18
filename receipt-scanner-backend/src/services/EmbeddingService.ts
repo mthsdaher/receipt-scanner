@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { env } from "../config/env";
+import { callWithAiSafety } from "../utils/aiSafety";
 
 const EMBEDDING_MODEL = "text-embedding-3-small";
 const EMBEDDING_DIM = 1536;
@@ -7,6 +8,7 @@ const EMBEDDING_DIM = 1536;
 /**
  * Generates an embedding vector for the given text.
  * Used for RAG and semantic search over receipts.
+ * Wrapped with timeout and retry for production reliability.
  *
  * @throws Error if OPENAI_API_KEY is not set or text is empty
  */
@@ -20,19 +22,19 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     throw new Error("Cannot embed empty text");
   }
 
-  const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+  return callWithAiSafety("embedding", async () => {
+    const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+    const response = await openai.embeddings.create({
+      model: EMBEDDING_MODEL,
+      input: normalized,
+    });
 
-  const response = await openai.embeddings.create({
-    model: EMBEDDING_MODEL,
-    input: normalized,
+    const embedding = response.data[0]?.embedding;
+    if (!embedding || embedding.length !== EMBEDDING_DIM) {
+      throw new Error("Invalid embedding response from OpenAI");
+    }
+    return embedding;
   });
-
-  const embedding = response.data[0]?.embedding;
-  if (!embedding || embedding.length !== EMBEDDING_DIM) {
-    throw new Error("Invalid embedding response from OpenAI");
-  }
-
-  return embedding;
 }
 
 /**

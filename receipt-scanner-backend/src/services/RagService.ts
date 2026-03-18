@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { env } from "../config/env";
 import { findSimilarReceipts, ReceiptWithSimilarity } from "../db/receiptEmbeddings";
 import { ServiceUnavailableError } from "../errors/AppError";
+import { callWithAiSafety } from "../utils/aiSafety";
 import { logAiOperation } from "../utils/aiLogger";
 import { generateEmbedding } from "./EmbeddingService";
 
@@ -58,8 +59,6 @@ export async function queryReceipts(
 
   const startMs = Date.now();
   try {
-    const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
-
     // 1. Generate embedding for the question
     const queryEmbedding = await generateEmbedding(normalizedQuestion);
 
@@ -85,14 +84,17 @@ Question: ${normalizedQuestion}
 
 Answer:`;
 
-    // 4. Call LLM
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      max_tokens: 300,
+    // 4. Call LLM (with timeout and retry)
+    const completion = await callWithAiSafety("rag_query", async () => {
+      const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+      return openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        max_tokens: 300,
+      });
     });
 
     const answer =

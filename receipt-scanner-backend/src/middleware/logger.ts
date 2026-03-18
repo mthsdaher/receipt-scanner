@@ -5,12 +5,14 @@
  * - Incoming request (method, path, ip)
  * - Completed request (statusCode, durationMs, userId)
  *
- * Attaches requestId to req for use in error handler and downstream.
+ * Attaches requestId to req and runs the rest of the chain within AsyncLocalStorage
+ * so services can access requestId via getContextLogger().
  */
 
 import { randomUUID } from "crypto";
 import { Request, Response, NextFunction } from "express";
 import { appLogger, createRequestLogger } from "../utils/logger";
+import { runWithContext } from "../utils/requestContext";
 
 export { appLogger };
 
@@ -56,7 +58,8 @@ const loggerMiddleware = (req: Request, res: Response, next: NextFunction): void
     );
   });
 
-  next();
+  // Run rest of chain within request context so services get requestId
+  runWithContext({ requestId }, () => next());
 };
 
 export default loggerMiddleware;

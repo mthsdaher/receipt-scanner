@@ -6,6 +6,7 @@ import { BadRequestError, ForbiddenError, NotFoundError } from "../errors/AppErr
 import type { CreateReceiptData } from "../repositories/ReceiptRepository";
 import * as receiptRepository from "../repositories/ReceiptRepository";
 import { env } from "../config/env";
+import { getContextLogger } from "../utils/requestContext";
 import { logAiOperation } from "../utils/aiLogger";
 import { categorizeReceipt } from "./CategorizationService";
 import {
@@ -98,11 +99,21 @@ export const ReceiptService = {
     const tax = normalizeOptionalAmount(input.dto.tax);
     const date = normalizeDate(input.dto.date);
 
+    const log = getContextLogger("receipt");
+
     // 1. Idempotency key check: retries with same key return existing receipt
     const idempotencyKey = input.idempotencyKey?.trim();
     if (idempotencyKey) {
       const existing = await findExistingByIdempotencyKey(idempotencyKey, input.userId);
       if (existing) {
+        log.info(
+          {
+            event: "receipt_duplicate_idempotency",
+            receiptId: existing.id,
+            userId: input.userId,
+          },
+          "Receipt returned (idempotency key match)"
+        );
         return { receipt: existing, isDuplicate: true };
       }
     }
@@ -115,6 +126,16 @@ export const ReceiptService = {
       description
     );
     if (duplicate) {
+      log.info(
+        {
+          event: "receipt_duplicate_content",
+          receiptId: duplicate.id,
+          userId: input.userId,
+          amount,
+          description: description.slice(0, 50),
+        },
+        "Receipt returned (duplicate content)"
+      );
       return { receipt: duplicate, isDuplicate: true };
     }
 
@@ -137,7 +158,32 @@ export const ReceiptService = {
 
     const receipt = await receiptRepository.create(input.userId, createData);
 
-    // Background: embedding + auto-categorization (non-blocking, fire-and-forget)
+    // Log validation failures for audit (fintech: inconsistent receipts flagged)
+    if (validation.status === "invalid") {
+      log.warn(
+        {
+          event: "receipt_validation_invalid",
+          receiptId: receipt.id,
+          userId: input.userId,
+          validationReason: validation.reason,
+        },
+        "Receipt saved with invalid totals (flagged for review)"
+      );
+    }
+
+    log.info(
+      {
+        event: "receipt_created",
+        receiptId: receipt.id,
+        userId: input.userId,
+        amount,
+        validationStatus: validation.status,
+      },
+      "Receipt created"
+    );
+
+    // CRITICAL: AI is fire-and-forget. Receipt creation NEVER depends on AI success.
+    // If OpenAI fails (timeout, retry exhausted), receipt is still saved. AI jobs log and continue.
     if (env.OPENAI_API_KEY?.trim()) {
       void this.runBackgroundAiJobs(receipt);
     }

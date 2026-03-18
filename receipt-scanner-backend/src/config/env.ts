@@ -116,6 +116,25 @@ export const env = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "",
 
   /**
+   * AI call timeout in ms. Prevents hanging on OpenAI API failures.
+   * Default 30s; production systems isolate external dependencies.
+   */
+  AI_TIMEOUT_MS: parsePositiveInteger(
+    process.env.AI_TIMEOUT_MS ?? "30000",
+    30000,
+    "AI_TIMEOUT_MS"
+  ),
+
+  /**
+   * Max retries for AI calls (0 = no retry). Transient failures may succeed on retry.
+   */
+  AI_MAX_RETRIES: parseNonNegativeInteger(
+    process.env.AI_MAX_RETRIES ?? "2",
+    2,
+    "AI_MAX_RETRIES"
+  ),
+
+  /**
    * Duplicate detection: amount tolerance in currency units (e.g. 0.01 = 1 cent).
    * Two receipts with same userId, date, and similar description are duplicates if |amount1 - amount2| <= this.
    */

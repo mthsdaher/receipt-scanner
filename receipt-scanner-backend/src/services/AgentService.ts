@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { env } from "../config/env";
 import { ServiceUnavailableError } from "../errors/AppError";
+import { callWithAiSafety } from "../utils/aiSafety";
 import { logAiOperation } from "../utils/aiLogger";
 import { searchReceiptsSemantic } from "./RagService";
 import { ReceiptService } from "./ReceiptService";
@@ -226,12 +227,14 @@ Use the tools when needed to fulfill the user's request. Be concise and helpful.
   while (iterations < MAX_AGENT_ITERATIONS) {
     iterations++;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages,
-      tools: AGENT_TOOLS,
-      max_tokens: 500,
-    });
+    const completion = await callWithAiSafety("agent_chat", () =>
+      openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages,
+        tools: AGENT_TOOLS,
+        max_tokens: 500,
+      })
+    );
 
     const choice = completion.choices[0];
     const message = choice?.message;
