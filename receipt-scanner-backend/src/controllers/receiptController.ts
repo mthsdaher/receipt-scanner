@@ -26,7 +26,13 @@ const createReceipt = asyncHandler(async (req: Request, res: Response): Promise<
     throw new UnauthorizedError("Token missing or invalid");
   }
 
-  const { amount, date, description, category, subtotal, tax } = req.body;
+  const { amount, date, description, category, subtotal, tax, idempotencyKey } = req.body;
+
+  // Idempotency key: header takes precedence over body (Stripe-style)
+  const key =
+    (req.headers["idempotency-key"] as string)?.trim() ||
+    (idempotencyKey as string)?.trim() ||
+    undefined;
 
   const dto: CreateReceiptDto = {
     amount,
@@ -37,14 +43,17 @@ const createReceipt = asyncHandler(async (req: Request, res: Response): Promise<
     tax,
   };
 
-  const receipt = await ReceiptService.create({
+  const { receipt, isDuplicate } = await ReceiptService.create({
     userId: currentUser.id,
     dto,
+    idempotencyKey: key,
   });
 
-  res.status(201).json({
+  // 201 Created for new receipt; 200 OK for duplicate/idempotent retry
+  res.status(isDuplicate ? 200 : 201).json({
     status: "success",
     data: receipt,
+    ...(isDuplicate && { duplicate: true }),
   });
 });
 

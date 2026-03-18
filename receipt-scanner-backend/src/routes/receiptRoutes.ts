@@ -38,6 +38,11 @@ router.post(
       .optional()
       .isFloat({ min: 0 })
       .withMessage('Tax must be a non-negative number'),
+    body('idempotencyKey')
+      .optional()
+      .trim()
+      .isLength({ max: 128 })
+      .withMessage('Idempotency key must be at most 128 characters'),
   ],
   createReceipt
 );

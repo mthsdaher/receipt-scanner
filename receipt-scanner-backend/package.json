@@ -12,6 +12,7 @@
     "dev:all": "concurrently -n backend,frontend,ocr -c blue,green,magenta \"npm run dev\" \"npm run start --prefix ../receipt-scanner-frontend\" \"cd ../receipt-scanner-frontend && python -m uvicorn ocr_service:app --reload --host 0.0.0.0 --port 8000\"",
     "seed": "ts-node src/seeds/seed.ts",
     "migrate:002": "ts-node scripts/run-migration-002.ts",
+    "migrate:004": "ts-node scripts/run-migration-004.ts",
     "check:openapi": "node -e \"JSON.parse(require('fs').readFileSync('src/openapi.json','utf8')); console.log('openapi.json is valid');\"",
     "test": "jest --runInBand"
   },

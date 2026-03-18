@@ -1,4 +1,5 @@
 import * as receiptEmbeddingsDb from "../db/receiptEmbeddings";
+import * as receiptDb from "../db/receipts";
 import * as userDb from "../db/users";
 import type { CreateReceiptDto, ReceiptDto } from "../dtos/receipt";
 import { BadRequestError, ForbiddenError, NotFoundError } from "../errors/AppError";
@@ -7,6 +8,10 @@ import * as receiptRepository from "../repositories/ReceiptRepository";
 import { env } from "../config/env";
 import { logAiOperation } from "../utils/aiLogger";
 import { categorizeReceipt } from "./CategorizationService";
+import {
+  findExistingByIdempotencyKey,
+  findPotentialDuplicate,
+} from "./DuplicateDetectionService";
 import { generateEmbedding, receiptToEmbeddableText } from "./EmbeddingService";
 import {
   validateReceiptTotals,
@@ -26,6 +31,14 @@ import {
 export interface CreateReceiptInput {
   userId: string;
   dto: CreateReceiptDto;
+  /** Optional idempotency key (header or body). Same key within TTL returns existing receipt. */
+  idempotencyKey?: string;
+}
+
+export interface CreateReceiptResult {
+  receipt: ReceiptDto;
+  /** True if we returned an existing receipt (duplicate or idempotent retry) */
+  isDuplicate: boolean;
 }
 
 const normalizeText = (value: string): string => {
@@ -65,9 +78,11 @@ const normalizeOptionalAmount = (value: number | undefined): number | undefined 
 export const ReceiptService = {
   /**
    * Creates a receipt after validating user exists and normalizing input.
+   * Idempotency: same key within TTL returns existing receipt (no duplicate).
+   * Duplicate detection: same userId + amount + date + description returns existing.
    * Triggers background jobs for embedding and LLM categorization when OpenAI is configured.
    */
-  async create(input: CreateReceiptInput): Promise<ReceiptDto> {
+  async create(input: CreateReceiptInput): Promise<CreateReceiptResult> {
     const user = await userDb.findUserById(input.userId);
     if (!user) {
       throw new NotFoundError("User not found");
@@ -81,22 +96,43 @@ export const ReceiptService = {
     const amount = normalizeAmount(input.dto.amount);
     const subtotal = normalizeOptionalAmount(input.dto.subtotal);
     const tax = normalizeOptionalAmount(input.dto.tax);
+    const date = normalizeDate(input.dto.date);
 
-    // Financial validation: subtotal + tax must equal total when both are provided.
-    // Fintech practice: we PERSIST invalid receipts with status=invalid for audit trail,
-    // rather than rejecting. Auditors and reconciliation workflows need to see what was
-    // submitted. Companies like Amex flag inconsistent receipts for review.
+    // 1. Idempotency key check: retries with same key return existing receipt
+    const idempotencyKey = input.idempotencyKey?.trim();
+    if (idempotencyKey) {
+      const existing = await findExistingByIdempotencyKey(idempotencyKey, input.userId);
+      if (existing) {
+        return { receipt: existing, isDuplicate: true };
+      }
+    }
+
+    // 2. Duplicate detection: same user, amount, date, description
+    const duplicate = await findPotentialDuplicate(
+      input.userId,
+      amount,
+      date,
+      description
+    );
+    if (duplicate) {
+      return { receipt: duplicate, isDuplicate: true };
+    }
+
+    // 3. Financial validation: subtotal + tax must equal total when both are provided.
     const validation = validateReceiptTotals(subtotal, tax, amount);
 
     const createData: CreateReceiptData = {
       amount,
-      date: normalizeDate(input.dto.date),
+      date,
       description,
       category: normalizeCategory(input.dto.category),
       subtotal,
       tax,
       validationStatus: validation.status as ValidationStatus,
       validationReason: validation.status === "invalid" ? validation.reason : undefined,
+      idempotencyKeyHash: idempotencyKey
+        ? receiptDb.hashIdempotencyKey(idempotencyKey)
+        : undefined,
     };
 
     const receipt = await receiptRepository.create(input.userId, createData);
@@ -106,7 +142,7 @@ export const ReceiptService = {
       void this.runBackgroundAiJobs(receipt);
     }
 
-    return receipt;
+    return { receipt, isDuplicate: false };
   },
 
   /**

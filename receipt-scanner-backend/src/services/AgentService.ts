@@ -154,7 +154,7 @@ async function executeTool(
       if (Number.isNaN(date.getTime())) {
         return "Error: invalid date format. Use YYYY-MM-DD.";
       }
-      const receipt = await ReceiptService.create({
+      const { receipt } = await ReceiptService.create({
         userId,
         dto: {
           amount,

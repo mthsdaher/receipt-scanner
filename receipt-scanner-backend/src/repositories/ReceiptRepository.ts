@@ -23,6 +23,8 @@ import { appLogger } from "../utils/logger";
 export interface CreateReceiptData extends CreateReceiptDto {
   validationStatus: ReceiptValidationStatus;
   validationReason?: string;
+  /** Hashed idempotency key for duplicate/retry protection */
+  idempotencyKeyHash?: string;
 }
 
 /**
@@ -46,6 +48,7 @@ export async function create(
     tax: data.tax,
     validation_status: data.validationStatus,
     validation_reason: data.validationReason,
+    idempotency_key_hash: data.idempotencyKeyHash ?? undefined,
   });
   appLogger.debug(
     {

@@ -9,6 +9,8 @@
 2. **Executar as migrações** (em ordem)
    - `migrations/001_initial_schema.sql` — schema inicial
    - `migrations/002_add_embeddings.sql` — colunas para AI (embeddings, explainability)
+   - `migrations/003_financial_validation.sql` — subtotal, tax, validation_status
+   - `migrations/004_idempotency_and_duplicate_support.sql` — idempotency_key_hash
    - **Nota:** A migração 002 requer a extensão [pgvector](https://github.com/pgvector/pgvector#installation) no PostgreSQL
 
 3. **Configurar a connection string no `.env.development`**

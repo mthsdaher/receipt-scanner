@@ -114,5 +114,31 @@ export const env = {
   BACKEND_PUBLIC_URL: process.env.BACKEND_PUBLIC_URL ?? "http://localhost:3002",
   /** OpenAI API key for AI features (RAG, embeddings, agentic). Optional at startup; required when calling AI endpoints. */
   OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "",
+
+  /**
+   * Duplicate detection: amount tolerance in currency units (e.g. 0.01 = 1 cent).
+   * Two receipts with same userId, date, and similar description are duplicates if |amount1 - amount2| <= this.
+   */
+  DUPLICATE_AMOUNT_TOLERANCE: parseFloat(process.env.DUPLICATE_AMOUNT_TOLERANCE ?? "0.01") || 0.01,
+
+  /**
+   * Duplicate detection: date window in hours. Receipts within this window are considered same-day.
+   * E.g. 24 = same calendar day; 1 = within 1 hour.
+   */
+  DUPLICATE_DATE_WINDOW_HOURS: parsePositiveInteger(
+    process.env.DUPLICATE_DATE_WINDOW_HOURS ?? "24",
+    24,
+    "DUPLICATE_DATE_WINDOW_HOURS"
+  ),
+
+  /**
+   * Idempotency key TTL in hours. Keys expire after this period.
+   * Stripe uses 24h; we default to 24 for consistency.
+   */
+  IDEMPOTENCY_KEY_TTL_HOURS: parsePositiveInteger(
+    process.env.IDEMPOTENCY_KEY_TTL_HOURS ?? "24",
+    24,
+    "IDEMPOTENCY_KEY_TTL_HOURS"
+  ),
 } as const;
 
