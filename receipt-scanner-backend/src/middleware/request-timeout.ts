@@ -10,12 +10,16 @@ export const requestTimeout = (req: Request, res: Response, next: NextFunction):
     if (res.headersSent) return;
 
     const requestId = req.requestId ?? "unknown";
-    appLogger.warn("http_request_timed_out", {
-      requestId,
-      method: req.method,
-      path: req.originalUrl,
-      timeoutMs: env.REQUEST_TIMEOUT_MS,
-    });
+    appLogger.warn(
+      {
+        event: "http_request_timed_out",
+        requestId,
+        method: req.method,
+        path: req.originalUrl,
+        timeoutMs: env.REQUEST_TIMEOUT_MS,
+      },
+      "Request timed out"
+    );
 
     res.status(503).json({
       status: "error",

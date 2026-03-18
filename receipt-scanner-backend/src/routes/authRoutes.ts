@@ -5,7 +5,7 @@ import { UserService } from "../services/UserService";
 import { authRateLimiter } from "../middleware/rate-limiters";
 
 const router = Router();
-const redirectUri = `${env.BACKEND_PUBLIC_URL}/api/auth/google/callback`;
+const redirectUri = `${env.BACKEND_PUBLIC_URL}/api/v1/auth/google/callback`;
 
 function isGoogleOAuthConfigured(): boolean {
   return !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);

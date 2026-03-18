@@ -19,20 +19,28 @@ pool.on("connect", (client) => {
 export const query = pool.query.bind(pool);
 export { pgvector };
 
-export const connectDB = async () => {
-  try {
-    const client = await pool.connect();
-    await client.query("SELECT 1");
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const connectDB = async (retries = 5) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      await pgvector.registerTypes(client);
-    } catch (pgvErr) {
-      console.warn("[database] pgvector not available (run migration 002 if using AI features):", (pgvErr as Error).message);
+      const client = await pool.connect();
+      await client.query("SELECT 1");
+      try {
+        await pgvector.registerTypes(client);
+      } catch (pgvErr) {
+        console.warn("[database] pgvector not available (run migration 002 if using AI features):", (pgvErr as Error).message);
+      }
+      client.release();
+      console.log("PostgreSQL Connected!");
+      return;
+    } catch (error) {
+      console.error(`Error connecting to PostgreSQL (attempt ${attempt}/${retries}):`, error);
+      if (attempt === retries) throw error;
+      const delay = attempt * 2000;
+      console.log(`Retrying in ${delay / 1000}s...`);
+      await sleep(delay);
     }
-    client.release();
-    console.log("PostgreSQL Connected!");
-  } catch (error) {
-    console.error("Error connecting to PostgreSQL:", error);
-    throw error;
   }
 };
 

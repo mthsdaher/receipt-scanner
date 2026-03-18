@@ -1,3 +1,4 @@
+/// <reference path="./types/express.d.ts" />
 import { env } from "./config/env";
 import { Server } from "http";
 import { closeDB, connectDB } from "./config/database";
@@ -11,7 +12,7 @@ const gracefulShutdown = async (signal: string, exitCode: number): Promise<void>
   if (shuttingDown) return;
   shuttingDown = true;
 
-  appLogger.warn("server_shutdown_started", { signal });
+  appLogger.warn({ event: "server_shutdown_started", signal }, "Shutdown started");
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -29,14 +30,18 @@ const gracefulShutdown = async (signal: string, exitCode: number): Promise<void>
     });
 
     await closeDB();
-    appLogger.info("server_shutdown_completed", { signal });
+    appLogger.info({ event: "server_shutdown_completed", signal }, "Shutdown completed");
     process.exit(exitCode);
   } catch (error) {
-    appLogger.error("server_shutdown_failed", {
-      signal,
-      message: error instanceof Error ? error.message : "Unknown shutdown error",
-      stack: error instanceof Error ? error.stack : undefined,
-    });
+    appLogger.error(
+      {
+        event: "server_shutdown_failed",
+        signal,
+        message: error instanceof Error ? error.message : "Unknown shutdown error",
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+      "Shutdown failed"
+    );
     process.exit(1);
   }
 };
@@ -49,17 +54,21 @@ const registerProcessHandlers = (): void => {
     void gracefulShutdown("SIGTERM", 0);
   });
   process.on("unhandledRejection", (reason) => {
-    appLogger.error("process_unhandled_rejection", {
-      message: reason instanceof Error ? reason.message : "Unhandled rejection",
-      stack: reason instanceof Error ? reason.stack : undefined,
-    });
+    appLogger.error(
+      {
+        event: "process_unhandled_rejection",
+        message: reason instanceof Error ? reason.message : "Unhandled rejection",
+        stack: reason instanceof Error ? reason.stack : undefined,
+      },
+      "Unhandled rejection"
+    );
     void gracefulShutdown("unhandledRejection", 1);
   });
   process.on("uncaughtException", (error) => {
-    appLogger.error("process_uncaught_exception", {
-      message: error.message,
-      stack: error.stack,
-    });
+    appLogger.error(
+      { event: "process_uncaught_exception", message: error.message, stack: error.stack },
+      "Uncaught exception"
+    );
     void gracefulShutdown("uncaughtException", 1);
   });
 };
@@ -68,17 +77,25 @@ const bootstrap = async (): Promise<void> => {
   try {
     await connectDB();
     server = app.listen(env.PORT, () => {
-      appLogger.info("server_started", {
-        port: env.PORT,
-        nodeEnv: env.NODE_ENV,
-        docsPath: "/api-docs",
-      });
+      appLogger.info(
+        {
+          event: "server_started",
+          port: env.PORT,
+          nodeEnv: env.NODE_ENV,
+          docsPath: "/api-docs",
+        },
+        "Server started"
+      );
     });
   } catch (err: unknown) {
-    appLogger.error("server_startup_failed", {
-      message: err instanceof Error ? err.message : "Failed to start server",
-      stack: err instanceof Error ? err.stack : undefined,
-    });
+    appLogger.error(
+      {
+        event: "server_startup_failed",
+        message: err instanceof Error ? err.message : "Failed to start server",
+        stack: err instanceof Error ? err.stack : undefined,
+      },
+      "Startup failed"
+    );
     process.exit(1);
   }
 };

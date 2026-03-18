@@ -22,11 +22,11 @@ interface AiLogMeta {
  */
 export function logAiOperation(meta: AiLogMeta): void {
   const event = meta.success ? "ai_operation_success" : "ai_operation_failed";
-  const logMeta: Record<string, unknown> = { ...meta };
+  const logMeta = { event, ...meta };
   if (meta.success) {
-    appLogger.info(event, logMeta);
+    appLogger.info(logMeta, event);
   } else {
-    appLogger.warn(event, logMeta);
+    appLogger.warn(logMeta, event);
   }
 }
 

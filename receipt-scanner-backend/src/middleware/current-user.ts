@@ -7,12 +7,6 @@ interface UserPayload {
   email: string;
 }
 
-declare module 'express' {
-  interface Request {
-    currentUser?: UserPayload;
-  }
-}
-
 export const currentUser = (
   req: Request,
   res: Response,

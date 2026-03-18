@@ -1,3 +1,4 @@
+/// <reference path="../types/express.d.ts" />
 import { NextFunction, Request, Response } from "express";
 import {
   AppError,
@@ -42,14 +43,19 @@ export const errorHandler = (
 
   // Known application errors
   if (err instanceof AppError) {
-    appLogger.warn("http_request_failed", {
-      requestId,
-      path: req.originalUrl,
-      method: req.method,
-      statusCode: err.statusCode,
-      code: getAppErrorCode(err),
-      message: err.message,
-    });
+    appLogger.warn(
+      {
+        event: "http_request_failed",
+        requestId,
+        path: req.originalUrl,
+        method: req.method,
+        statusCode: err.statusCode,
+        code: getAppErrorCode(err),
+        message: err.message,
+        userId: req.currentUser?.id ?? null,
+      },
+      "Request failed"
+    );
 
     res.status(err.statusCode).json({
       status: "error",
@@ -70,14 +76,18 @@ export const errorHandler = (
     const validationErr = err as { array: () => { msg: string; path: string }[] };
     const details = validationErr.array();
 
-    appLogger.warn("http_request_failed_validation", {
-      requestId,
-      path: req.originalUrl,
-      method: req.method,
-      statusCode: 400,
-      code: "VALIDATION_ERROR",
-      details,
-    });
+    appLogger.warn(
+      {
+        event: "http_request_failed_validation",
+        requestId,
+        path: req.originalUrl,
+        method: req.method,
+        statusCode: 400,
+        code: "VALIDATION_ERROR",
+        details,
+      },
+      "Validation failed"
+    );
 
     res.status(400).json({
       status: "error",
@@ -98,15 +108,21 @@ export const errorHandler = (
       : "Unknown error";
   const details = !isProd && err instanceof Error ? { stack: err.stack } : undefined;
 
-  appLogger.error("http_request_failed_unexpected", {
-    requestId,
-    path: req.originalUrl,
-    method: req.method,
-    statusCode,
-    code: "INTERNAL_ERROR",
-    message: err instanceof Error ? err.message : "Unknown error",
-    ...(details ? { details } : {}),
-  });
+  appLogger.error(
+    {
+      event: "http_request_failed_unexpected",
+      requestId,
+      path: req.originalUrl,
+      method: req.method,
+      statusCode,
+      code: "INTERNAL_ERROR",
+      message: err instanceof Error ? err.message : "Unknown error",
+      errorName: err instanceof Error ? err.name : undefined,
+      userId: req.currentUser?.id ?? null,
+      ...(details ? { details } : {}),
+    },
+    "Unexpected error"
+  );
 
   res.status(statusCode).json({
     status: "error",

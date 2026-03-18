@@ -5,10 +5,13 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
+    "kill-ports": "npx kill-port 3000 3002",
+    "predev": "npm run kill-ports",
     "dev": "concurrently -n backend,frontend -c blue,green \"nodemon --exec ts-node src/index.ts\" \"npm run start --prefix ../receipt-scanner-frontend\"",
     "dev:backend": "nodemon --exec ts-node src/index.ts",
     "dev:all": "concurrently -n backend,frontend,ocr -c blue,green,magenta \"npm run dev\" \"npm run start --prefix ../receipt-scanner-frontend\" \"cd ../receipt-scanner-frontend && python -m uvicorn ocr_service:app --reload --host 0.0.0.0 --port 8000\"",
     "seed": "ts-node src/seeds/seed.ts",
+    "migrate:002": "ts-node scripts/run-migration-002.ts",
     "check:openapi": "node -e \"JSON.parse(require('fs').readFileSync('src/openapi.json','utf8')); console.log('openapi.json is valid');\"",
     "test": "jest --runInBand"
   },
@@ -41,6 +44,7 @@
     "openai": "^6.32.0",
     "pg": "^8.18.0",
     "pgvector": "^0.2.1",
+    "pino": "^10.3.1",
     "swagger-ui-express": "^5.0.1",
     "zod": "^4.3.6"
   },
@@ -58,6 +62,7 @@
     "concurrently": "^9.1.0",
     "jest": "^30.2.0",
     "nodemon": "^3.1.9",
+    "pino-pretty": "^13.1.3",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.4",
     "ts-node": "^10.9.2",

@@ -14,6 +14,7 @@
 
 import * as receiptDb from "../db/receipts";
 import type { CreateReceiptDto, ReceiptDto, ReceiptValidationStatus } from "../dtos/receipt";
+import { appLogger } from "../utils/logger";
 
 /**
  * Data passed to create - includes validation result computed by the service.
@@ -34,6 +35,7 @@ export async function create(
   userId: string,
   data: CreateReceiptData
 ): Promise<ReceiptDto> {
+  const start = Date.now();
   const row = await receiptDb.createReceipt({
     userId,
     amount: data.amount,
@@ -45,6 +47,15 @@ export async function create(
     validation_status: data.validationStatus,
     validation_reason: data.validationReason,
   });
+  appLogger.debug(
+    {
+      event: "db_receipt_create",
+      userId,
+      receiptId: row.id,
+      durationMs: Date.now() - start,
+    },
+    "DB: receipt created"
+  );
   return row as ReceiptDto;
 }
 
@@ -54,7 +65,17 @@ export async function create(
  * @returns Array of receipts
  */
 export async function findByUserId(userId: string): Promise<ReceiptDto[]> {
+  const start = Date.now();
   const rows = await receiptDb.findReceiptsByUserId(userId);
+  appLogger.debug(
+    {
+      event: "db_receipt_find_by_user",
+      userId,
+      count: rows.length,
+      durationMs: Date.now() - start,
+    },
+    "DB: receipts found"
+  );
   return rows as ReceiptDto[];
 }
 

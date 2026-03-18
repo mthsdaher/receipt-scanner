@@ -36,7 +36,10 @@ app.use(
         callback(null, true);
         return;
       }
-      appLogger.warn("cors_origin_blocked", { origin, allowedOrigins });
+      appLogger.warn(
+        { event: "cors_origin_blocked", origin, allowedOrigins },
+        "CORS origin blocked"
+      );
       callback(null, false);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -55,11 +58,12 @@ const openapiPath = path.resolve(__dirname, "openapi.json");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(require(openapiPath)));
 
-app.use("/api/auth", authRoutes);
-app.use("/api/ai", aiRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/receipts", receiptRoutes);
-app.use("/api/paddle", ocrProxy);
+const API_V1 = "/api/v1";
+app.use(`${API_V1}/auth`, authRoutes);
+app.use(`${API_V1}/ai`, aiRoutes);
+app.use(`${API_V1}/users`, userRoutes);
+app.use(`${API_V1}/receipts`, receiptRoutes);
+app.use(`${API_V1}/paddle`, ocrProxy);
 app.use("/", healthRoutes);
 
 app.use((_req, _res, next) => {
