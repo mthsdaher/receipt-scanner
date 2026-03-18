@@ -82,15 +82,11 @@ export const ReceiptService = {
     const subtotal = normalizeOptionalAmount(input.dto.subtotal);
     const tax = normalizeOptionalAmount(input.dto.tax);
 
-    // Financial validation: subtotal + tax must equal total when both are provided
+    // Financial validation: subtotal + tax must equal total when both are provided.
+    // Fintech practice: we PERSIST invalid receipts with status=invalid for audit trail,
+    // rather than rejecting. Auditors and reconciliation workflows need to see what was
+    // submitted. Companies like Amex flag inconsistent receipts for review.
     const validation = validateReceiptTotals(subtotal, tax, amount);
-
-    // Reject invalid receipts - fintech best practice: do not persist inconsistent data
-    if (validation.status === "invalid") {
-      throw new BadRequestError(
-        validation.reason ?? "Receipt totals are inconsistent. Subtotal + tax must equal total."
-      );
-    }
 
     const createData: CreateReceiptData = {
       amount,
@@ -100,7 +96,7 @@ export const ReceiptService = {
       subtotal,
       tax,
       validationStatus: validation.status as ValidationStatus,
-      validationReason: undefined,
+      validationReason: validation.status === "invalid" ? validation.reason : undefined,
     };
 
     const receipt = await receiptRepository.create(input.userId, createData);

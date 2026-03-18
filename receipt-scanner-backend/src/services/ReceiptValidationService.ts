@@ -1,18 +1,16 @@
 /**
- * ReceiptValidationService - Financial integrity validation.
+ * ReceiptValidationService (FinancialValidationService) - Financial integrity validation.
  *
- * WHY THIS MATTERS (Fintech):
- * - Subtotal + tax must equal total. Inconsistencies indicate:
- *   • OCR extraction errors
- *   • Manual entry mistakes
- *   • Potential fraud or tampering
- * - Companies like Amex, Visa, Stripe flag inconsistent receipts for review
- * - Auditors require financial data to reconcile
+ * WHY FINANCIAL SYSTEMS NEVER TRUST RAW INPUT:
+ * - User input, OCR output, and API payloads can be wrong or tampered with.
+ * - Inconsistencies indicate: OCR errors, manual mistakes, or potential fraud.
+ * - Companies like Amex, Visa, Stripe flag inconsistent receipts for review.
+ * - Auditors require financial data to reconcile; invalid data must be traceable.
  *
  * HOW COMPANIES DETECT INCONSISTENCIES:
- * - Rule-based checks: |(subtotal + tax) - total| > tolerance
+ * - Rule-based checks: |(subtotal + tax) - total| > tolerance (we use 1 cent)
  * - ML models trained on historical data to spot anomalies
- * - Reconciliation workflows for invalid receipts
+ * - Reconciliation workflows for invalid receipts (stored with validationStatus=invalid)
  */
 
 /** Tolerance for floating-point comparison (2 decimal places = 1 cent) */
